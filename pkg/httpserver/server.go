@@ -98,16 +98,19 @@ func (s *Server) Notify() <-chan error {
 func (s *Server) Shutdown() error {
 	var shutdownErrors []error
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 	defer cancel()
 
-	if err := s.srv.Shutdown(ctx); err != nil && !errors.Is(err, context.Canceled) {
-		s.logger.Error(err, "http server - Server - Shutdown - s.srv.Shutdown")
+	if err := s.srv.Shutdown(ctx); err != nil &&
+		!errors.Is(err, context.Canceled) &&
+		!errors.Is(err, http.ErrServerClosed) {
+		s.logger.Error(err, "httpserver - Server - Shutdown - s.srv.Shutdown")
 		shutdownErrors = append(shutdownErrors, err)
 	}
 
-	if err := s.eg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
-		s.logger.Error(err, "http server - Server - Shutdown - s.eg.Wait")
+	// Wait for all goroutines to finish and get any error
+	if err := s.eg.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		s.logger.Error(err, "httpserver - Server - Shutdown - s.eg.Wait")
 		shutdownErrors = append(shutdownErrors, err)
 	}
 

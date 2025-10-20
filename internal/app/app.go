@@ -13,11 +13,11 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	logger := logger.New(cfg.Log.Dir, cfg.Log.Level)
+	l := logger.New(cfg.Log.Dir, cfg.Log.Level)
 
 	// HTTP Server
-	httpServer := httpserver.New(logger, httpserver.Port(cfg.HTTP.Port))
-	router.NewRouter(httpServer.App, logger)
+	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
+	router.NewRouter(httpServer.App, l)
 
 	// Start server
 	httpServer.Start()
@@ -28,14 +28,14 @@ func Run(cfg *config.Config) {
 
 	select {
 	case s := <-interrupt:
-		logger.Info("app - Run - signal: %s", s.String())
+		l.Infof("app - Run - signal: %s", s.String())
 	case err := <-httpServer.Notify():
-		logger.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
 	}
 
 	// Shutdown
 	err := httpServer.Shutdown()
 	if err != nil {
-		logger.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
 	}
 }
