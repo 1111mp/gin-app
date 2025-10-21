@@ -12,6 +12,7 @@ import (
 	"github.com/1111mp/gin-app/pkg/logger"
 )
 
+// Run -.
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Dir, cfg.Log.Level)
 
@@ -22,9 +23,9 @@ func Run(cfg *config.Config) {
 	// Start server
 	httpServer.Start()
 
-	// Waiting signal
+	// Wait for interrupt signal to gracefully shutdown the server
 	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
 	case s := <-interrupt:

@@ -15,7 +15,7 @@ const (
 	_defaultAddr            = ":8080"
 	_defaultReadTimeout     = 5 * time.Second
 	_defaultWriteTimeout    = 5 * time.Second
-	_defaultShutdownTimeout = 3 * time.Second
+	_defaultShutdownTimeout = 8 * time.Second
 )
 
 // Server -.
@@ -64,7 +64,7 @@ func New(l logger.Interface, opts ...Option) *Server {
 
 	s.srv = &http.Server{
 		Addr:           s.address,
-		Handler:        s.App,
+		Handler:        s.App.Handler(),
 		ReadTimeout:    s.readTimeout,
 		WriteTimeout:   s.writeTimeout,
 		MaxHeaderBytes: 1 << 20,
@@ -78,7 +78,7 @@ func (s *Server) Start() {
 
 	s.eg.Go(func() error {
 		err := s.srv.ListenAndServe()
-		if err != nil {
+		if err != nil && err != http.ErrServerClosed {
 			s.notify <- err
 			close(s.notify)
 			return err

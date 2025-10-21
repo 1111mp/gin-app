@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	v1 "github.com/1111mp/gin-app/internal/api/v1"
+	api "github.com/1111mp/gin-app/internal/api/v1"
+	"github.com/1111mp/gin-app/internal/service"
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
@@ -18,6 +19,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// NewRouter -.
 func NewRouter(router *gin.Engine, l *logger.Logger) {
 	// middleware
 	router.Use(requestid.New())
@@ -75,9 +77,13 @@ func NewRouter(router *gin.Engine, l *logger.Logger) {
 		c.Status(http.StatusOK)
 	})
 
+	s := service.NewServiceGroup(l)
+	a := api.NewApiGroup(s)
+	r := NewRouterGroup(a)
+
 	// Routes
 	apiV1Group := router.Group("/api/v1")
 	{
-		v1.NewRoutes(apiV1Group, l)
+		r.UserRouter.RegisterRoutes(apiV1Group)
 	}
 }
