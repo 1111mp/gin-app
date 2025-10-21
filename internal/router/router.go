@@ -11,9 +11,9 @@ import (
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
-	"github.com/gin-contrib/timeout"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	timeout "github.com/vearne/gin-timeout"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -62,15 +62,7 @@ func NewRouter(router *gin.Engine, l *logger.Logger) {
 	}))
 	router.Use(ginzap.RecoveryWithZap(l.Logger(), true))
 
-	router.Use(timeout.New(
-		timeout.WithTimeout(3*time.Second),
-		timeout.WithResponse(func(ctx *gin.Context) {
-			ctx.JSON(http.StatusRequestTimeout, gin.H{
-				"code":    http.StatusRequestTimeout,
-				"message": "request timeout",
-			})
-		}),
-	))
+	router.Use(timeout.Timeout(timeout.WithTimeout(3 * time.Second)))
 
 	// K8s probe
 	router.GET("/healthz", func(c *gin.Context) {
