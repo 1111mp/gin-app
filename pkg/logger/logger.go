@@ -70,7 +70,7 @@ func New(dir string, level string) *Logger {
 	consoleCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	consoleCfg.EncodeTime = zapcore.RFC3339TimeEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
-	//file
+	// file
 	fileCfg := zap.NewProductionEncoderConfig()
 	fileCfg.EncodeTime = zapcore.RFC3339TimeEncoder
 	fileEncoder := zapcore.NewJSONEncoder(fileCfg)

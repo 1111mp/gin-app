@@ -18,7 +18,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
-	router.NewRouter(httpServer.App, l)
+	router.NewRouter(httpServer.App, cfg, l)
 
 	// Start server
 	httpServer.Start()

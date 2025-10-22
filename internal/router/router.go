@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/1111mp/gin-app/config"
+	_ "github.com/1111mp/gin-app/docs"
 	api "github.com/1111mp/gin-app/internal/api/v1"
 	"github.com/1111mp/gin-app/internal/service"
 	"github.com/1111mp/gin-app/pkg/logger"
@@ -13,6 +15,8 @@ import (
 	"github.com/gin-contrib/requestid"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	timeout "github.com/vearne/gin-timeout"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -20,10 +24,16 @@ import (
 )
 
 // NewRouter -.
-func NewRouter(router *gin.Engine, l *logger.Logger) {
+// Swagger spec:
+// @title       Go Clean Template API
+// @description This is a sample server Petstore server.
+// @version 		1.0
+// @host 				localhost:8080
+// @BasePath 		/api/v1
+func NewRouter(app *gin.Engine, cfg *config.Config, l *logger.Logger) {
 	// middleware
-	router.Use(requestid.New())
-	router.Use(cors.New(cors.Config{
+	app.Use(requestid.New())
+	app.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "X-Request-ID"},
 		AllowCredentials: true,
@@ -33,7 +43,7 @@ func NewRouter(router *gin.Engine, l *logger.Logger) {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	router.Use(ginzap.GinzapWithConfig(l.Logger(), &ginzap.Config{
+	app.Use(ginzap.GinzapWithConfig(l.Logger(), &ginzap.Config{
 		UTC:        true,
 		TimeFormat: time.RFC3339,
 		Context: func(ctx *gin.Context) []zapcore.Field {
@@ -60,12 +70,17 @@ func NewRouter(router *gin.Engine, l *logger.Logger) {
 			return fields
 		},
 	}))
-	router.Use(ginzap.RecoveryWithZap(l.Logger(), true))
+	app.Use(ginzap.RecoveryWithZap(l.Logger(), true))
 
-	router.Use(timeout.Timeout(timeout.WithTimeout(3 * time.Second)))
+	app.Use(timeout.Timeout(timeout.WithTimeout(3 * time.Second)))
+
+	// Swagger
+	if cfg.Swagger.Enabled {
+		app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	}
 
 	// K8s probe
-	router.GET("/healthz", func(c *gin.Context) {
+	app.GET("/healthz", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
 
@@ -74,7 +89,7 @@ func NewRouter(router *gin.Engine, l *logger.Logger) {
 	r := NewRouterGroup(a)
 
 	// Routes
-	apiV1Group := router.Group("/api/v1")
+	apiV1Group := app.Group("/api/v1")
 	{
 		r.UserRouter.RegisterRoutes(apiV1Group)
 	}

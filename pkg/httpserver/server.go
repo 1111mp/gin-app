@@ -75,7 +75,6 @@ func New(l logger.Interface, opts ...Option) *Server {
 
 // Start -.
 func (s *Server) Start() {
-
 	s.eg.Go(func() error {
 		err := s.srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
