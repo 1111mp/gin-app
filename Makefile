@@ -34,15 +34,32 @@ format: ### Run code formatter
 
 run: deps swag-v1 ### swag run for API v1
 	go mod download && \
-	CGO_ENABLED=0 go run ./cmd/app
+	CGO_ENABLED=0 go run -tags migrate ./cmd/app
 .PHONY: run
 
 linter-golangci: ### check by golangci linter
 	golangci-lint run
 .PHONY: linter-golangci
 
+linter-dotenv: ### check by dotenv linter
+	dotenv-linter
+.PHONY: linter-dotenv
+
+migrate-create:  ### create new migration
+	go run -mod=mod ent/migrate/main.go '$(word 2,$(MAKECMDGOALS))'
+.PHONY: migrate-create
+
+migrate-up: ### migration up
+	migrate -path ent/migrate/migrations -database '$(PG_URL)?sslmode=disable' up
+.PHONY: migrate-up
+
+migrate-down: ### migration down
+	migrate -path ent/migrate/migrations -database '$(PG_URL)?sslmode=disable' down 1
+.PHONY: migrate-down
+
 bin-deps: ### install tools
 	go install tool
+	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
 .PHONY: bin-deps
 
 pre-commit: swag-v1 format linter-golangci ### run pre-commit

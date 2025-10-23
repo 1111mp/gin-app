@@ -9,8 +9,10 @@ import (
 	"github.com/1111mp/gin-app/config"
 	_ "github.com/1111mp/gin-app/docs"
 	api "github.com/1111mp/gin-app/internal/api/v1"
+	"github.com/1111mp/gin-app/internal/repository"
 	"github.com/1111mp/gin-app/internal/service"
 	"github.com/1111mp/gin-app/pkg/logger"
+	"github.com/1111mp/gin-app/pkg/postgres"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	ginzap "github.com/gin-contrib/zap"
@@ -30,7 +32,7 @@ import (
 // @version 		1.0
 // @host 				localhost:8080
 // @BasePath 		/api/v1
-func NewRouter(app *gin.Engine, cfg *config.Config, l *logger.Logger) {
+func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *logger.Logger) {
 	// middleware
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
@@ -84,7 +86,8 @@ func NewRouter(app *gin.Engine, cfg *config.Config, l *logger.Logger) {
 		c.Status(http.StatusOK)
 	})
 
-	s := service.NewServiceGroup(l)
+	rep := repository.NewRepositoryGroup(pg)
+	s := service.NewServiceGroup(rep, l)
 	a := api.NewApiGroup(s)
 	r := NewRouterGroup(a)
 

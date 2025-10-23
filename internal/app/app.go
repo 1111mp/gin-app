@@ -1,3 +1,4 @@
+// Package app configures and runs application.
 package app
 
 import (
@@ -10,15 +11,23 @@ import (
 	"github.com/1111mp/gin-app/internal/router"
 	"github.com/1111mp/gin-app/pkg/httpserver"
 	"github.com/1111mp/gin-app/pkg/logger"
+	"github.com/1111mp/gin-app/pkg/postgres"
 )
 
-// Run -.
-func Run(cfg *config.Config) {
+// Run creates objects via constructors.
+func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
 	l := logger.New(cfg.Log.Dir, cfg.Log.Level)
+
+	// Repository
+	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+	}
+	defer pg.Close()
 
 	// HTTP Server
 	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
-	router.NewRouter(httpServer.App, cfg, l)
+	router.NewRouter(httpServer.App, cfg, pg, l)
 
 	// Start server
 	httpServer.Start()
@@ -35,7 +44,7 @@ func Run(cfg *config.Config) {
 	}
 
 	// Shutdown
-	err := httpServer.Shutdown()
+	err = httpServer.Shutdown()
 	if err != nil {
 		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
 	}

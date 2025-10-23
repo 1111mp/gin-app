@@ -13,7 +13,7 @@ type (
 		App  App
 		HTTP HTTP
 		Log  Log
-		// PG      PG
+		PG   PG
 		// GRPC    GRPC
 		Metrics Metrics
 		Swagger Swagger
@@ -36,11 +36,11 @@ type (
 		Level string `env:"LOG_LEVEL,required"`
 	}
 
-	// // PG -.
-	// PG struct {
-	// 	PoolMax int    `env:"PG_POOL_MAX,required"`
-	// 	URL     string `env:"PG_URL,required"`
-	// }
+	// PG -.
+	PG struct {
+		PoolMax int    `env:"PG_POOL_MAX,required"`
+		URL     string `env:"PG_URL,required"`
+	}
 
 	// // GRPC -.
 	// GRPC struct {
