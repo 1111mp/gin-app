@@ -45,6 +45,14 @@ linter-dotenv: ### check by dotenv linter
 	dotenv-linter
 .PHONY: linter-dotenv
 
+test: ### run test
+	go test -v -race -covermode atomic -coverprofile=coverage.txt ./internal/...
+.PHONY: test
+
+mock: ### run mockgen
+	mockgen -source ./internal/repository/user_repository.go -package mocks > ./internal/repository/mock_user_repository.go
+.PHONY: mock
+
 migrate-create:  ### create new migration
 	go run -mod=mod ent/migrate/main.go '$(word 2,$(MAKECMDGOALS))'
 .PHONY: migrate-create

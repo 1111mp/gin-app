@@ -8,7 +8,7 @@ import (
 // UserService -.
 type UserService struct {
 	l   logger.Interface
-	rep *repository.UserRepository
+	rep repository.UserRepository
 }
 
 // CreateUser -.
