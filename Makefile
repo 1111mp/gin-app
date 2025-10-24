@@ -7,6 +7,10 @@ include .env.example
 export
 endif
 
+BASE_STACK = docker compose -f docker-compose.yml
+INTEGRATION_TEST_STACK = $(BASE_STACK) -f docker-compose-integration-test.yml
+ALL_STACK = $(INTEGRATION_TEST_STACK)
+
 # HELP =================================================================================================================
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -14,6 +18,22 @@ endif
 
 help: ## Display this help screen
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+compose-up: ### Run docker compose (without backend and reverse proxy)
+	$(BASE_STACK) up --build -d db rabbitmq && docker compose logs -f
+.PHONY: compose-up
+
+compose-up-all: ### Run docker compose (with backend and reverse proxy)
+	$(BASE_STACK) up --build -d
+.PHONY: compose-up-all
+
+compose-up-integration-test: ### Run docker compose with integration test
+	$(INTEGRATION_TEST_STACK) up --build --abort-on-container-exit --exit-code-from integration-test
+.PHONY: compose-up-integration-test
+
+compose-down: ### Down docker compose
+	$(ALL_STACK) down --remove-orphans
+.PHONY: compose-down
 
 swag-v1: ### swag init
 	swag init -g internal/router/router.go
@@ -37,6 +57,10 @@ run: deps swag-v1 ### swag run for API v1
 	CGO_ENABLED=0 go run -tags migrate ./cmd/app
 .PHONY: run
 
+docker-rm-volume: ### remove docker volume
+	docker volume rm gin-app_pg-data
+.PHONY: docker-rm-volume
+
 linter-golangci: ### check by golangci linter
 	golangci-lint run
 .PHONY: linter-golangci
@@ -50,7 +74,7 @@ test: ### run test
 .PHONY: test
 
 mock: ### run mockgen
-	mockgen -source ./internal/repository/user_repository.go -package mocks > ./internal/repository/mock_user_repository.go
+	mockgen -source ./internal/repository/user_repository.go -package service_test > ./internal/service/mocks_user_test.go
 .PHONY: mock
 
 migrate-create:  ### create new migration

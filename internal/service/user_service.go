@@ -11,6 +11,11 @@ type UserService struct {
 	rep repository.UserRepository
 }
 
+// NewUserService -.
+func NewUserService(l logger.Interface, rep repository.UserRepository) *UserService {
+	return &UserService{l: l, rep: rep}
+}
+
 // CreateUser -.
 func (u *UserService) CreateUser() {
 	u.l.Info("CreateUser called")

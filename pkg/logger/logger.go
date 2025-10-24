@@ -51,34 +51,43 @@ func New(dir string, level string) *Logger {
 		l = zap.InfoLevel
 	}
 
-	timberLogger := &timberjack.Logger{
-		Filename:           filepath.Join(dir, "gin-app.log"),
-		MaxSize:            200,
-		MaxBackups:         3,
-		MaxAge:             14,
-		Compression:        "gzip",
-		LocalTime:          true,
-		RotationInterval:   24 * time.Hour,
-		RotateAt:           []string{"00:00", "12:00"},
-		BackupTimeFormat:   "2006-01-02-15-04-05",
-		AppendTimeAfterExt: true,
-		// RotateAtMinutes:    []int{0, 15, 30, 45},
-	}
+	var core zapcore.Core
 
 	// console
 	consoleCfg := zap.NewDevelopmentEncoderConfig()
 	consoleCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	consoleCfg.EncodeTime = zapcore.RFC3339TimeEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
-	// file
-	fileCfg := zap.NewProductionEncoderConfig()
-	fileCfg.EncodeTime = zapcore.RFC3339TimeEncoder
-	fileEncoder := zapcore.NewJSONEncoder(fileCfg)
 
-	core := zapcore.NewTee(
-		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), l),
-		zapcore.NewCore(fileEncoder, zapcore.AddSync(timberLogger), l),
-	)
+	if dir != "" {
+		timberLogger := &timberjack.Logger{
+			Filename:           filepath.Join(dir, "gin-app.log"),
+			MaxSize:            200,
+			MaxBackups:         3,
+			MaxAge:             14,
+			Compression:        "gzip",
+			LocalTime:          true,
+			RotationInterval:   24 * time.Hour,
+			RotateAt:           []string{"00:00", "12:00"},
+			BackupTimeFormat:   "2006-01-02-15-04-05",
+			AppendTimeAfterExt: true,
+			// RotateAtMinutes:    []int{0, 15, 30, 45},
+		}
+
+		// file
+		fileCfg := zap.NewProductionEncoderConfig()
+		fileCfg.EncodeTime = zapcore.RFC3339TimeEncoder
+		fileEncoder := zapcore.NewJSONEncoder(fileCfg)
+
+		core = zapcore.NewTee(
+			zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), l),
+			zapcore.NewCore(fileEncoder, zapcore.AddSync(timberLogger), l),
+		)
+	} else {
+		core = zapcore.NewTee(
+			zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), l),
+		)
+	}
 
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
