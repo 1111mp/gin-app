@@ -71,10 +71,11 @@ func New(url string, opts ...Option) (*Postgres, error) {
 	return pg, nil
 }
 
-// NewEntClient-.
+// NewEntClient -.
 func NewEntClient(pool *pgxpool.Pool) *ent.Client {
 	db := stdlib.OpenDBFromPool(pool)
 	drv := entsql.OpenDB(dialect.Postgres, db)
+
 	return ent.NewClient(ent.Driver(drv))
 }
 

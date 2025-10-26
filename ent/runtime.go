@@ -2,8 +2,46 @@
 
 package ent
 
+import (
+	"time"
+
+	"github.com/1111mp/gin-app/ent/post"
+	"github.com/1111mp/gin-app/ent/schema"
+	"github.com/1111mp/gin-app/ent/user"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	postMixin := schema.Post{}.Mixin()
+	postMixinFields0 := postMixin[0].Fields()
+	_ = postMixinFields0
+	postFields := schema.Post{}.Fields()
+	_ = postFields
+	// postDescCreateTime is the schema descriptor for create_time field.
+	postDescCreateTime := postMixinFields0[0].Descriptor()
+	// post.DefaultCreateTime holds the default value on creation for the create_time field.
+	post.DefaultCreateTime = postDescCreateTime.Default.(func() time.Time)
+	// postDescUpdateTime is the schema descriptor for update_time field.
+	postDescUpdateTime := postMixinFields0[1].Descriptor()
+	// post.DefaultUpdateTime holds the default value on creation for the update_time field.
+	post.DefaultUpdateTime = postDescUpdateTime.Default.(func() time.Time)
+	// post.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	post.UpdateDefaultUpdateTime = postDescUpdateTime.UpdateDefault.(func() time.Time)
+	userMixin := schema.User{}.Mixin()
+	userMixinFields0 := userMixin[0].Fields()
+	_ = userMixinFields0
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescCreateTime is the schema descriptor for create_time field.
+	userDescCreateTime := userMixinFields0[0].Descriptor()
+	// user.DefaultCreateTime holds the default value on creation for the create_time field.
+	user.DefaultCreateTime = userDescCreateTime.Default.(func() time.Time)
+	// userDescUpdateTime is the schema descriptor for update_time field.
+	userDescUpdateTime := userMixinFields0[1].Descriptor()
+	// user.DefaultUpdateTime holds the default value on creation for the update_time field.
+	user.DefaultUpdateTime = userDescUpdateTime.Default.(func() time.Time)
+	// user.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	user.UpdateDefaultUpdateTime = userDescUpdateTime.UpdateDefault.(func() time.Time)
 }

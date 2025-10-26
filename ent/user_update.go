@@ -6,10 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/1111mp/gin-app/ent/post"
 	"github.com/1111mp/gin-app/ent/predicate"
 	"github.com/1111mp/gin-app/ent/user"
 )
@@ -27,13 +29,98 @@ func (_u *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return _u
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (_u *UserUpdate) SetUpdateTime(v time.Time) *UserUpdate {
+	_u.mutation.SetUpdateTime(v)
+	return _u
+}
+
+// SetName sets the "name" field.
+func (_u *UserUpdate) SetName(v string) *UserUpdate {
+	_u.mutation.SetName(v)
+	return _u
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableName(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetName(*v)
+	}
+	return _u
+}
+
+// SetEmail sets the "email" field.
+func (_u *UserUpdate) SetEmail(v string) *UserUpdate {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableEmail(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// SetPassword sets the "password" field.
+func (_u *UserUpdate) SetPassword(v string) *UserUpdate {
+	_u.mutation.SetPassword(v)
+	return _u
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePassword(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetPassword(*v)
+	}
+	return _u
+}
+
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (_u *UserUpdate) AddPostIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddPostIDs(ids...)
+	return _u
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (_u *UserUpdate) AddPosts(v ...*Post) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPostIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
 }
 
+// ClearPosts clears all "posts" edges to the Post entity.
+func (_u *UserUpdate) ClearPosts() *UserUpdate {
+	_u.mutation.ClearPosts()
+	return _u
+}
+
+// RemovePostIDs removes the "posts" edge to Post entities by IDs.
+func (_u *UserUpdate) RemovePostIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemovePostIDs(ids...)
+	return _u
+}
+
+// RemovePosts removes "posts" edges to Post entities.
+func (_u *UserUpdate) RemovePosts(v ...*Post) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePostIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -59,6 +146,14 @@ func (_u *UserUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_u *UserUpdate) defaults() {
+	if _, ok := _u.mutation.UpdateTime(); !ok {
+		v := user.UpdateDefaultUpdateTime()
+		_u.mutation.SetUpdateTime(v)
+	}
+}
+
 func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
@@ -67,6 +162,63 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdateTime(); ok {
+		_spec.SetField(user.FieldUpdateTime, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.Name(); ok {
+		_spec.SetField(user.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if _u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PostsTable,
+			Columns: []string{user.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPostsIDs(); len(nodes) > 0 && !_u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PostsTable,
+			Columns: []string{user.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PostsTable,
+			Columns: []string{user.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -88,9 +240,93 @@ type UserUpdateOne struct {
 	mutation *UserMutation
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (_u *UserUpdateOne) SetUpdateTime(v time.Time) *UserUpdateOne {
+	_u.mutation.SetUpdateTime(v)
+	return _u
+}
+
+// SetName sets the "name" field.
+func (_u *UserUpdateOne) SetName(v string) *UserUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableName(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
+	}
+	return _u
+}
+
+// SetEmail sets the "email" field.
+func (_u *UserUpdateOne) SetEmail(v string) *UserUpdateOne {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableEmail(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// SetPassword sets the "password" field.
+func (_u *UserUpdateOne) SetPassword(v string) *UserUpdateOne {
+	_u.mutation.SetPassword(v)
+	return _u
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePassword(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetPassword(*v)
+	}
+	return _u
+}
+
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (_u *UserUpdateOne) AddPostIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddPostIDs(ids...)
+	return _u
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (_u *UserUpdateOne) AddPosts(v ...*Post) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPostIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
+}
+
+// ClearPosts clears all "posts" edges to the Post entity.
+func (_u *UserUpdateOne) ClearPosts() *UserUpdateOne {
+	_u.mutation.ClearPosts()
+	return _u
+}
+
+// RemovePostIDs removes the "posts" edge to Post entities by IDs.
+func (_u *UserUpdateOne) RemovePostIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemovePostIDs(ids...)
+	return _u
+}
+
+// RemovePosts removes "posts" edges to Post entities.
+func (_u *UserUpdateOne) RemovePosts(v ...*Post) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePostIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -108,6 +344,7 @@ func (_u *UserUpdateOne) Select(field string, fields ...string) *UserUpdateOne {
 
 // Save executes the query and returns the updated User entity.
 func (_u *UserUpdateOne) Save(ctx context.Context) (*User, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -130,6 +367,14 @@ func (_u *UserUpdateOne) Exec(ctx context.Context) error {
 func (_u *UserUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *UserUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdateTime(); !ok {
+		v := user.UpdateDefaultUpdateTime()
+		_u.mutation.SetUpdateTime(v)
 	}
 }
 
@@ -158,6 +403,63 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdateTime(); ok {
+		_spec.SetField(user.FieldUpdateTime, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.Name(); ok {
+		_spec.SetField(user.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if _u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PostsTable,
+			Columns: []string{user.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPostsIDs(); len(nodes) > 0 && !_u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PostsTable,
+			Columns: []string{user.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PostsTable,
+			Columns: []string{user.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: _u.config}
 	_spec.Assign = _node.assignValues

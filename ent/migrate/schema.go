@@ -8,21 +8,68 @@ import (
 )
 
 var (
+	// PostsColumns holds the columns for the "posts" table.
+	PostsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "title", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString, Nullable: true},
+		{Name: "category", Type: field.TypeEnum, Enums: []string{"Feed", "Story"}},
+		{Name: "user_posts", Type: field.TypeInt},
+	}
+	// PostsTable holds the schema information for the "posts" table.
+	PostsTable = &schema.Table{
+		Name:       "posts",
+		Comment:    "Post table stores all post information.",
+		Columns:    PostsColumns,
+		PrimaryKey: []*schema.Column{PostsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "posts_users_posts",
+				Columns:    []*schema.Column{PostsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "post_title_user_posts",
+				Unique:  true,
+				Columns: []*schema.Column{PostsColumns[3], PostsColumns[6]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "password", Type: field.TypeString},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
+		Comment:    "User table stores all user information.",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_name_email",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[3], UsersColumns[4]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		PostsTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	PostsTable.ForeignKeys[0].RefTable = UsersTable
 }

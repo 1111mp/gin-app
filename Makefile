@@ -77,6 +77,14 @@ mock: ### run mockgen
 	mockgen -source ./internal/repository/user_repository.go -package service_test > ./internal/service/mocks_user_test.go
 .PHONY: mock
 
+schema-create: ### create ent schema
+	go run -mod=mod entgo.io/ent/cmd/ent new '$(word 2,$(MAKECMDGOALS))'
+.PHONY: schema-create
+
+ent-gen: ### generate ent code
+	go generate ./ent
+.PHONY: ent-gen
+
 migrate-create:  ### create new migration
 	go run -mod=mod ent/migrate/main.go '$(word 2,$(MAKECMDGOALS))'
 .PHONY: migrate-create

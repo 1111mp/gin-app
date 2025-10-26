@@ -10,8 +10,10 @@
 package service_test
 
 import (
+	context "context"
 	reflect "reflect"
 
+	ent "github.com/1111mp/gin-app/ent"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -49,4 +51,19 @@ func (m *MockUserRepository) CreateOne() {
 func (mr *MockUserRepositoryMockRecorder) CreateOne() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOne", reflect.TypeOf((*MockUserRepository)(nil).CreateOne))
+}
+
+// GetById mocks base method.
+func (m *MockUserRepository) GetById(ctx context.Context, id int) (*ent.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetById", ctx, id)
+	ret0, _ := ret[0].(*ent.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetById indicates an expected call of GetById.
+func (mr *MockUserRepositoryMockRecorder) GetById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockUserRepository)(nil).GetById), ctx, id)
 }
