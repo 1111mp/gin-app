@@ -11,32 +11,26 @@ import (
 //go:generate mockgen -source=interfaces.go -destination=../service/mocks_user_test.go -package=service_test
 
 // UserRepository -.
-type UserRepository interface {
+type UserRepositoryInter interface {
 	CreateOne()
 	GetById(ctx context.Context, id int) (*ent.User, error)
 }
 
 // UserRepository -.
-type userRepository struct {
+type UserRepository struct {
 	pg *postgres.Postgres
 }
 
 // CreateOne -.
-func (u *userRepository) CreateOne() {}
+func (u *UserRepository) CreateOne() {}
 
 // GetById -.
-func (u *userRepository) GetById(ctx context.Context, id int) (*ent.User, error) {
-	user, err := u.pg.Client.User.
+func (u *UserRepository) GetById(ctx context.Context, id int) (*ent.User, error) {
+	return u.pg.Client.User.
 		Query().
 		WithPosts().
 		Where(
 			user.IDEQ(id),
 		).
 		Only(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
 }

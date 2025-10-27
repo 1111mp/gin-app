@@ -2,6 +2,7 @@ package ent
 
 import "github.com/1111mp/gin-app/ent/post"
 
+// PostEntity -.
 type PostEntity struct {
 	ID         int           `json:"id,omitempty"`
 	Title      string        `json:"title,omitempty"`

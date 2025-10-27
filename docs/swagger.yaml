@@ -1,4 +1,62 @@
-basePath: /api/v1
+definitions:
+  ent.PostEntity:
+    properties:
+      category:
+        $ref: '#/definitions/post.Category'
+      content:
+        type: string
+      createTime:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  ent.UserEntity:
+    properties:
+      createTime:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      posts:
+        items:
+          $ref: '#/definitions/ent.PostEntity'
+        type: array
+      updateTime:
+        type: string
+    type: object
+  errors.APIError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  post.Category:
+    enum:
+    - Feed
+    - Story
+    type: string
+    x-enum-varnames:
+    - CategoryFeed
+    - CategoryStory
+  response.UserAPIResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: success
+        type: string
+      payload:
+        $ref: '#/definitions/ent.UserEntity'
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -6,7 +64,7 @@ info:
   title: Go Clean Template API
   version: "1.0"
 paths:
-  /user/{id}:
+  /api/v1/user/{id}:
     get:
       consumes:
       - application/json
@@ -20,8 +78,24 @@ paths:
         type: integer
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: Successfully retrieved user
+          schema:
+            $ref: '#/definitions/response.UserAPIResponse'
+        "400":
+          description: Bad request (invalid ID)
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
       summary: Get user by ID
       tags:
-      - user
+      - User
 swagger: "2.0"

@@ -12,6 +12,7 @@ type (
 	Config struct {
 		App  App
 		HTTP HTTP
+		JWT  JWT
 		Log  Log
 		PG   PG
 		// GRPC    GRPC
@@ -27,7 +28,13 @@ type (
 
 	// HTTP -.
 	HTTP struct {
-		Port string `env:"HTTP_PORT,required"`
+		Port       string `env:"HTTP_PORT,required"`
+		CookieName string `env:"HTTP_COOKIE_NAME,required"`
+	}
+
+	// JWT -.
+	JWT struct {
+		SECRET string `env:"JWT_SECRET,required"`
 	}
 
 	// Log -.

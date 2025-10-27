@@ -17,44 +17,44 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockUserRepository is a mock of UserRepository interface.
-type MockUserRepository struct {
+// MockUserRepositoryInter is a mock of UserRepositoryInter interface.
+type MockUserRepositoryInter struct {
 	ctrl     *gomock.Controller
-	recorder *MockUserRepositoryMockRecorder
+	recorder *MockUserRepositoryInterMockRecorder
 	isgomock struct{}
 }
 
-// MockUserRepositoryMockRecorder is the mock recorder for MockUserRepository.
-type MockUserRepositoryMockRecorder struct {
-	mock *MockUserRepository
+// MockUserRepositoryInterMockRecorder is the mock recorder for MockUserRepositoryInter.
+type MockUserRepositoryInterMockRecorder struct {
+	mock *MockUserRepositoryInter
 }
 
-// NewMockUserRepository creates a new mock instance.
-func NewMockUserRepository(ctrl *gomock.Controller) *MockUserRepository {
-	mock := &MockUserRepository{ctrl: ctrl}
-	mock.recorder = &MockUserRepositoryMockRecorder{mock}
+// NewMockUserRepositoryInter creates a new mock instance.
+func NewMockUserRepositoryInter(ctrl *gomock.Controller) *MockUserRepositoryInter {
+	mock := &MockUserRepositoryInter{ctrl: ctrl}
+	mock.recorder = &MockUserRepositoryInterMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
+func (m *MockUserRepositoryInter) EXPECT() *MockUserRepositoryInterMockRecorder {
 	return m.recorder
 }
 
 // CreateOne mocks base method.
-func (m *MockUserRepository) CreateOne() {
+func (m *MockUserRepositoryInter) CreateOne() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "CreateOne")
 }
 
 // CreateOne indicates an expected call of CreateOne.
-func (mr *MockUserRepositoryMockRecorder) CreateOne() *gomock.Call {
+func (mr *MockUserRepositoryInterMockRecorder) CreateOne() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOne", reflect.TypeOf((*MockUserRepository)(nil).CreateOne))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOne", reflect.TypeOf((*MockUserRepositoryInter)(nil).CreateOne))
 }
 
 // GetById mocks base method.
-func (m *MockUserRepository) GetById(ctx context.Context, id int) (*ent.User, error) {
+func (m *MockUserRepositoryInter) GetById(ctx context.Context, id int) (*ent.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetById", ctx, id)
 	ret0, _ := ret[0].(*ent.User)
@@ -63,7 +63,7 @@ func (m *MockUserRepository) GetById(ctx context.Context, id int) (*ent.User, er
 }
 
 // GetById indicates an expected call of GetById.
-func (mr *MockUserRepositoryMockRecorder) GetById(ctx, id any) *gomock.Call {
+func (mr *MockUserRepositoryInterMockRecorder) GetById(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockUserRepository)(nil).GetById), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockUserRepositoryInter)(nil).GetById), ctx, id)
 }

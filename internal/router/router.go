@@ -9,8 +9,10 @@ import (
 	"github.com/1111mp/gin-app/config"
 	_ "github.com/1111mp/gin-app/docs"
 	api "github.com/1111mp/gin-app/internal/api/v1"
+	"github.com/1111mp/gin-app/internal/middleware"
 	"github.com/1111mp/gin-app/internal/repository"
 	"github.com/1111mp/gin-app/internal/service"
+	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/1111mp/gin-app/pkg/postgres"
 	"github.com/gin-contrib/cors"
@@ -31,9 +33,8 @@ import (
 // @description This is a sample server Petstore server.
 // @version 		1.0
 // @host 				localhost:8080
-// @BasePath 		/api/v1
 func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *logger.Logger) {
-	// middleware
+	// apply middlewares
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -44,7 +45,6 @@ func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *lo
 		},
 		MaxAge: 12 * time.Hour,
 	}))
-
 	app.Use(ginzap.GinzapWithConfig(l.Logger(), &ginzap.Config{
 		UTC:        true,
 		TimeFormat: time.RFC3339,
@@ -73,8 +73,8 @@ func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *lo
 		},
 	}))
 	app.Use(ginzap.RecoveryWithZap(l.Logger(), true))
-
 	app.Use(timeout.Timeout(timeout.WithTimeout(3 * time.Second)))
+	app.Use(middleware.ErrorHandler(l))
 
 	// Swagger
 	if cfg.Swagger.Enabled {
@@ -86,14 +86,18 @@ func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *lo
 		c.Status(http.StatusOK)
 	})
 
+	j := jwt.NewJWTManager(jwt.Issuer(cfg.App.Name), jwt.Secret(cfg.JWT.SECRET))
 	rep := repository.NewRepositoryGroup(pg)
-	s := service.NewServiceGroup(rep, l)
+	s := service.NewServiceGroup(rep, j, l)
 	a := api.NewApiGroup(s)
 	r := NewRouterGroup(a)
 
 	// Routes
-	apiV1Group := app.Group("/api/v1")
+	publicV1Api := app.Group("/api/v1")
+	privateV1Api := publicV1Api.Group("/")
+	privateV1Api.Use(middleware.AuthHandler(j, cfg.HTTP.CookieName))
 	{
-		r.UserRouter.RegisterRoutes(apiV1Group)
+		r.RegisterPublicRoutes(publicV1Api)
+		r.RegisterPrivateRoutes(privateV1Api)
 	}
 }

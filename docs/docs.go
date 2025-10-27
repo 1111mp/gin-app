@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/user/{id}": {
+        "/api/v1/user/{id}": {
             "get": {
                 "description": "Retrieve user information by given user ID",
                 "consumes": [
@@ -25,7 +25,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "User"
                 ],
                 "summary": "Get user by ID",
                 "operationId": "getUserById",
@@ -38,7 +38,121 @@ const docTemplate = `{
                         "required": true
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved user",
+                        "schema": {
+                            "$ref": "#/definitions/response.UserAPIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid ID)",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ent.PostEntity": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/post.Category"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "ent.UserEntity": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.PostEntity"
+                    }
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "errors.APIError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "post.Category": {
+            "type": "string",
+            "enum": [
+                "Feed",
+                "Story"
+            ],
+            "x-enum-varnames": [
+                "CategoryFeed",
+                "CategoryStory"
+            ]
+        },
+        "response.UserAPIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "message": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "payload": {
+                    "$ref": "#/definitions/ent.UserEntity"
+                }
             }
         }
     }
@@ -48,7 +162,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Go Clean Template API",
 	Description:      "This is a sample server Petstore server.",

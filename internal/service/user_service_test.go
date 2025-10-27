@@ -21,7 +21,7 @@ func TestCreateUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	repo := NewMockUserRepository(ctrl)
+	repo := NewMockUserRepositoryInter(ctrl)
 	l := logger.New("", "debug")
 	userService := service.NewUserService(l, repo)
 
@@ -42,7 +42,7 @@ func TestCreateUser(t *testing.T) {
 		t.Run(localTc.name, func(t *testing.T) {
 			localTc.mock()
 
-			userService.CreateUser()
+			userService.CreateOne()
 		})
 	}
 }
