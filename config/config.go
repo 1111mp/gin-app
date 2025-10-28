@@ -8,16 +8,28 @@ import (
 )
 
 type (
+	// ConfigInter -.
+	ConfigInterface interface {
+		App() App
+		HTTP() HTTP
+		JWT() JWT
+		Log() Log
+		PG() PG
+		// GRPC() GRPC
+		Metrics() Metrics
+		Swagger() Swagger
+	}
+
 	// Config -.
 	Config struct {
-		App  App
-		HTTP HTTP
-		JWT  JWT
-		Log  Log
-		PG   PG
-		// GRPC    GRPC
-		Metrics Metrics
-		Swagger Swagger
+		app  App
+		http HTTP
+		jwt  JWT
+		log  Log
+		pg   PG
+		// grpc    GRPC
+		metrics Metrics
+		swagger Swagger
 	}
 
 	// App -.
@@ -66,7 +78,7 @@ type (
 )
 
 // NewConfig returns app config.
-func NewConfig() (*Config, error) {
+func NewConfig() (ConfigInterface, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
 	}
@@ -78,3 +90,14 @@ func NewConfig() (*Config, error) {
 
 	return cfg, nil
 }
+
+// Implementation of ConfigInter methods
+func (c *Config) App() App         { return c.app }
+func (c *Config) HTTP() HTTP       { return c.http }
+func (c *Config) JWT() JWT         { return c.jwt }
+func (c *Config) Log() Log         { return c.log }
+func (c *Config) PG() PG           { return c.pg }
+func (c *Config) Metrics() Metrics { return c.metrics }
+func (c *Config) Swagger() Swagger { return c.swagger }
+
+// func (c *Config) GRPC() GRPC    { return c.grpc }

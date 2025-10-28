@@ -33,7 +33,7 @@ import (
 // @description This is a sample server Petstore server.
 // @version 		1.0
 // @host 				localhost:8080
-func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *logger.Logger) {
+func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgres, l *logger.Logger) {
 	// apply middlewares
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
@@ -77,7 +77,7 @@ func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *lo
 	app.Use(middleware.ErrorHandler(l))
 
 	// Swagger
-	if cfg.Swagger.Enabled {
+	if cfg.Swagger().Enabled {
 		app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
 
@@ -86,16 +86,16 @@ func NewRouter(app *gin.Engine, cfg *config.Config, pg *postgres.Postgres, l *lo
 		c.Status(http.StatusOK)
 	})
 
-	j := jwt.NewJWTManager(jwt.Issuer(cfg.App.Name), jwt.Secret(cfg.JWT.SECRET))
+	j := jwt.NewJWTManager(jwt.Issuer(cfg.App().Name), jwt.Secret(cfg.JWT().SECRET))
 	rep := repository.NewRepositoryGroup(pg)
 	s := service.NewServiceGroup(rep, j, l)
-	a := api.NewApiGroup(s)
+	a := api.NewApiGroup(s, cfg)
 	r := NewRouterGroup(a)
 
 	// Routes
 	publicV1Api := app.Group("/api/v1")
 	privateV1Api := publicV1Api.Group("/")
-	privateV1Api.Use(middleware.AuthHandler(j, cfg.HTTP.CookieName))
+	privateV1Api.Use(middleware.AuthHandler(j, cfg.HTTP().CookieName))
 	{
 		r.RegisterPublicRoutes(publicV1Api)
 		r.RegisterPrivateRoutes(privateV1Api)

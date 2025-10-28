@@ -1,4 +1,17 @@
 definitions:
+  dto.CreateOneUserDto:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
   ent.PostEntity:
     properties:
       category:
@@ -64,7 +77,38 @@ info:
   title: Go Clean Template API
   version: "1.0"
 paths:
-  /api/v1/user/{id}:
+  /api/v1/users:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account
+      operationId: CreateOne
+      parameters:
+      - description: User data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOneUserDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/response.UserAPIResponse'
+        "400":
+          description: Bad request (invalid params)
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      summary: Create a new user
+      tags:
+      - Users
+  /api/v1/users/{id}:
     get:
       consumes:
       - application/json
@@ -97,5 +141,5 @@ paths:
             $ref: '#/definitions/errors.APIError'
       summary: Get user by ID
       tags:
-      - User
+      - Users
 swagger: "2.0"

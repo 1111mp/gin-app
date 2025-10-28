@@ -13,20 +13,20 @@ type UserRouterInter interface {
 
 // UserRouter -.
 type UserRouter struct {
-	userApi *api.UserApi
+	userApi api.UserApiInter
 }
 
 // RegisterPublicRoutes -.
 func (u *UserRouter) RegisterPublicRoutes(group *gin.RouterGroup) {
-	// userGroup := group.Group("/user")
-	// {
-	// 	//
-	// }
+	userGroup := group.Group("/users")
+	{
+		userGroup.POST("", u.userApi.CreateOne)
+	}
 }
 
 // RegisterPrivateRoutes -.
 func (u *UserRouter) RegisterPrivateRoutes(group *gin.RouterGroup) {
-	userGroup := group.Group("/user")
+	userGroup := group.Group("/users")
 	{
 		userGroup.GET("/:id", u.userApi.GetById)
 	}

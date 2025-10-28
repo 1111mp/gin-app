@@ -1,6 +1,9 @@
 package schema
 
 import (
+	"context"
+	"errors"
+
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
@@ -8,6 +11,10 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/1111mp/gin-app/ent/hook"
+	"github.com/1111mp/gin-app/ent/schema/schematype"
 )
 
 // User holds the schema definition for the User entity.
@@ -55,5 +62,45 @@ func (User) Edges() []ent.Edge {
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("name", "email"),
+	}
+}
+
+// Hooks of the User.
+func (User) Hooks() []ent.Hook {
+	return []ent.Hook{
+		// Encrypt passwords on Create and UpdateOne
+		hook.On(
+			func(next ent.Mutator) ent.Mutator {
+				return hook.UserFunc(
+					func(ctx context.Context, m *schematype.UserMutation) (ent.Value, error) {
+						pwd, ok := m.Password()
+						if !ok || pwd == "" {
+							return nil, errors.New("unexpected 'password' value")
+						}
+
+						hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
+						if err != nil {
+							return nil, err
+						}
+
+						m.SetPassword(string(hash))
+						return next.Mutate(ctx, m)
+					},
+				)
+			},
+			ent.OpCreate|ent.OpUpdateOne,
+		),
+
+		// Disallow changing the "password" field on Update (many) operation.
+		hook.If(
+			hook.FixedError(errors.New("password cannot be edited on update many")),
+			hook.And(
+				hook.HasOp(ent.OpUpdate),
+				hook.Or(
+					hook.HasFields("password"),
+					hook.HasClearedFields("password"),
+				),
+			),
+		),
 	}
 }

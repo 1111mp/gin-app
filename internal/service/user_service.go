@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/1111mp/gin-app/ent"
+	"github.com/1111mp/gin-app/internal/dto"
 	"github.com/1111mp/gin-app/internal/repository"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/jwt"
@@ -14,7 +15,7 @@ import (
 
 // UserServiceInter -.
 type UserServiceInter interface {
-	CreateOne()
+	CreateOne(ctx context.Context, dto dto.CreateOneUserDto) (*ent.UserEntity, string, error)
 	GetById(ctx context.Context, id int) (*ent.UserEntity, error)
 }
 
@@ -26,14 +27,42 @@ type UserService struct {
 }
 
 // NewUserService -.
-func NewUserService(l logger.Interface, rep repository.UserRepositoryInter) *UserService {
-	return &UserService{l: l, rep: rep}
+func NewUserService(l logger.Interface,
+	rep repository.UserRepositoryInter,
+	jwt jwt.JWTManagerInterface,
+) *UserService {
+	return &UserService{
+		l:   l,
+		rep: rep,
+		jwt: jwt,
+	}
 }
 
 // CreateUser -.
-func (u *UserService) CreateOne() {
-	u.l.Info("CreateUser called")
-	u.rep.CreateOne()
+func (u *UserService) CreateOne(ctx context.Context, dto dto.CreateOneUserDto) (*ent.UserEntity, string, error) {
+	user, err := u.rep.CreateOne(ctx, dto)
+	if err != nil {
+		return nil, "", errors.WrapAPIError(
+			errors.ErrInternalServerError,
+			errors.NewRepositoryError(
+				err.Error(),
+				err,
+			),
+		)
+	}
+
+	token, err := u.jwt.GenerateToken(user.ID)
+	if err != nil {
+		return nil, "", errors.WrapAPIError(
+			errors.ErrInternalServerError,
+			errors.NewRepositoryError(
+				err.Error(),
+				err,
+			),
+		)
+	}
+
+	return user.IntoEntity(), token, nil
 }
 
 // GetById -.

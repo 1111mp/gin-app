@@ -15,18 +15,18 @@ import (
 )
 
 // Run creates objects via constructors.
-func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
-	l := logger.New(cfg.Log.Dir, cfg.Log.Level)
+func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
+	l := logger.New(cfg.Log().Dir, cfg.Log().Level)
 
 	// Repository
-	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
+	pg, err := postgres.New(cfg.PG().URL, postgres.MaxPoolSize(cfg.PG().PoolMax))
 	if err != nil {
 		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
 	defer pg.Close()
 
 	// HTTP Server
-	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
+	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP().Port))
 	router.NewRouter(httpServer.App, cfg, pg, l)
 
 	// Start server
