@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	// ConfigInter -.
+	// ConfigInterface -.
 	ConfigInterface interface {
 		App() App
 		HTTP() HTTP
@@ -22,14 +22,14 @@ type (
 
 	// Config -.
 	Config struct {
-		app  App
-		http HTTP
-		jwt  JWT
-		log  Log
-		pg   PG
-		// grpc    GRPC
-		metrics Metrics
-		swagger Swagger
+		AppData  App
+		HTTPData HTTP
+		JWTData  JWT
+		LogData  Log
+		PGData   PG
+		// GRPCData    GRPC
+		MetricsData Metrics
+		SwaggerData Swagger
 	}
 
 	// App -.
@@ -92,12 +92,12 @@ func NewConfig() (ConfigInterface, error) {
 }
 
 // Implementation of ConfigInter methods
-func (c *Config) App() App         { return c.app }
-func (c *Config) HTTP() HTTP       { return c.http }
-func (c *Config) JWT() JWT         { return c.jwt }
-func (c *Config) Log() Log         { return c.log }
-func (c *Config) PG() PG           { return c.pg }
-func (c *Config) Metrics() Metrics { return c.metrics }
-func (c *Config) Swagger() Swagger { return c.swagger }
+func (c *Config) App() App         { return c.AppData }
+func (c *Config) HTTP() HTTP       { return c.HTTPData }
+func (c *Config) JWT() JWT         { return c.JWTData }
+func (c *Config) Log() Log         { return c.LogData }
+func (c *Config) PG() PG           { return c.PGData }
+func (c *Config) Metrics() Metrics { return c.MetricsData }
+func (c *Config) Swagger() Swagger { return c.SwaggerData }
 
-// func (c *Config) GRPC() GRPC    { return c.grpc }
+// func (c *Config) GRPC() GRPC    { return c.GRPCData }

@@ -9,6 +9,7 @@ import (
 // ServiceGroup -.
 type ServiceGroup struct {
 	UserService UserServiceInter
+	PostService PostServiceInter
 }
 
 // NewServiceGroup -.
@@ -18,6 +19,10 @@ func NewServiceGroup(r *repository.RepositoryGroup, j jwt.JWTManagerInterface, l
 			l:   l,
 			rep: r.UserRepository,
 			jwt: j,
+		},
+		&PostService{
+			l:   l,
+			rep: r.PostRepository,
 		},
 	}
 }

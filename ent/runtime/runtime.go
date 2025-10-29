@@ -5,6 +5,7 @@ package runtime
 import (
 	"time"
 
+	"github.com/1111mp/gin-app/ent/accesstoken"
 	"github.com/1111mp/gin-app/ent/post"
 	"github.com/1111mp/gin-app/ent/schema"
 	"github.com/1111mp/gin-app/ent/user"
@@ -14,6 +15,21 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	accesstokenMixin := schema.AccessToken{}.Mixin()
+	accesstokenMixinFields0 := accesstokenMixin[0].Fields()
+	_ = accesstokenMixinFields0
+	accesstokenFields := schema.AccessToken{}.Fields()
+	_ = accesstokenFields
+	// accesstokenDescCreateTime is the schema descriptor for create_time field.
+	accesstokenDescCreateTime := accesstokenMixinFields0[0].Descriptor()
+	// accesstoken.DefaultCreateTime holds the default value on creation for the create_time field.
+	accesstoken.DefaultCreateTime = accesstokenDescCreateTime.Default.(func() time.Time)
+	// accesstokenDescUpdateTime is the schema descriptor for update_time field.
+	accesstokenDescUpdateTime := accesstokenMixinFields0[1].Descriptor()
+	// accesstoken.DefaultUpdateTime holds the default value on creation for the update_time field.
+	accesstoken.DefaultUpdateTime = accesstokenDescUpdateTime.Default.(func() time.Time)
+	// accesstoken.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	accesstoken.UpdateDefaultUpdateTime = accesstokenDescUpdateTime.UpdateDefault.(func() time.Time)
 	postMixin := schema.Post{}.Mixin()
 	postMixinFields0 := postMixin[0].Fields()
 	_ = postMixinFields0

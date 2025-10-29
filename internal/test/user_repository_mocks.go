@@ -43,7 +43,7 @@ func (m *MockUserRepositoryInter) EXPECT() *MockUserRepositoryInterMockRecorder 
 }
 
 // CreateOne mocks base method.
-func (m *MockUserRepositoryInter) CreateOne(ctx context.Context, arg1 dto.CreateOneUserDto) (*ent.User, error) {
+func (m *MockUserRepositoryInter) CreateOne(ctx context.Context, arg1 dto.UserCreateOneDto) (*ent.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOne", ctx, arg1)
 	ret0, _ := ret[0].(*ent.User)

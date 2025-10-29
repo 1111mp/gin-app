@@ -1,16 +1,28 @@
 definitions:
-  dto.CreateOneUserDto:
+  dto.PostCreateOneDto:
     properties:
-      email:
+      category:
+        allOf:
+        - $ref: '#/definitions/post.Category'
+        enum:
+        - Feed
+        - Story
+      content:
         type: string
-      name:
-        type: string
-      password:
+      title:
         type: string
     required:
-    - email
-    - name
-    - password
+    - category
+    - content
+    - title
+    type: object
+  dto.UserGetByIdDto:
+    properties:
+      id:
+        minimum: 1
+        type: integer
+    required:
+    - id
     type: object
   ent.PostEntity:
     properties:
@@ -59,6 +71,17 @@ definitions:
     x-enum-varnames:
     - CategoryFeed
     - CategoryStory
+  response.PostAPIResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: success
+        type: string
+      payload:
+        $ref: '#/definitions/ent.PostEntity'
+    type: object
   response.UserAPIResponse:
     properties:
       code:
@@ -77,19 +100,84 @@ info:
   title: Go Clean Template API
   version: "1.0"
 paths:
+  /api/v1/posts:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new post resource
+      operationId: PostCreateOne
+      parameters:
+      - description: Post data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PostCreateOneDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post created successfully
+          schema:
+            $ref: '#/definitions/response.PostAPIResponse'
+        "400":
+          description: Bad request (invalid params)
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      summary: Create a new post
+      tags:
+      - Posts
+  /api/v1/posts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve post information by given post ID
+      operationId: GetPostById
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved post
+          schema:
+            $ref: '#/definitions/response.PostAPIResponse'
+        "400":
+          description: Bad request (invalid ID)
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "404":
+          description: Post not found
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      summary: Get post by ID
+      tags:
+      - Posts
   /api/v1/users:
     post:
       consumes:
       - application/json
       description: Creates a new user account
-      operationId: CreateOne
+      operationId: UserCreateOne
       parameters:
       - description: User data
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateOneUserDto'
+          $ref: '#/definitions/dto.UserGetByIdDto'
       produces:
       - application/json
       responses:

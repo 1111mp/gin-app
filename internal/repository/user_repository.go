@@ -13,7 +13,7 @@ import (
 
 // UserRepository -.
 type UserRepositoryInter interface {
-	CreateOne(ctx context.Context, dto dto.CreateOneUserDto) (*ent.User, error)
+	CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.User, error)
 	GetById(ctx context.Context, id int) (*ent.User, error)
 }
 
@@ -25,7 +25,7 @@ type UserRepository struct {
 // CreateOne -.
 func (u *UserRepository) CreateOne(
 	ctx context.Context,
-	dto dto.CreateOneUserDto,
+	dto dto.UserCreateOneDto,
 ) (*ent.User, error) {
 	return u.pg.Client.User.
 		Create().

@@ -15,6 +15,104 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/posts": {
+            "post": {
+                "description": "Creates a new post resource",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Create a new post",
+                "operationId": "PostCreateOne",
+                "parameters": [
+                    {
+                        "description": "Post data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PostCreateOneDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Post created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.PostAPIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid params)",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/posts/{id}": {
+            "get": {
+                "description": "Retrieve post information by given post ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Posts"
+                ],
+                "summary": "Get post by ID",
+                "operationId": "GetPostById",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved post",
+                        "schema": {
+                            "$ref": "#/definitions/response.PostAPIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid ID)",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Post not found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "description": "Creates a new user account",
@@ -28,7 +126,7 @@ const docTemplate = `{
                     "Users"
                 ],
                 "summary": "Create a new user",
-                "operationId": "CreateOne",
+                "operationId": "UserCreateOne",
                 "parameters": [
                     {
                         "description": "User data",
@@ -36,7 +134,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateOneUserDto"
+                            "$ref": "#/definitions/dto.UserGetByIdDto"
                         }
                     }
                 ],
@@ -115,22 +213,42 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.CreateOneUserDto": {
+        "dto.PostCreateOneDto": {
             "type": "object",
             "required": [
-                "email",
-                "name",
-                "password"
+                "category",
+                "content",
+                "title"
             ],
             "properties": {
-                "email": {
+                "category": {
+                    "enum": [
+                        "Feed",
+                        "Story"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/post.Category"
+                        }
+                    ]
+                },
+                "content": {
                     "type": "string"
                 },
-                "name": {
+                "title": {
                     "type": "string"
-                },
-                "password": {
-                    "type": "string"
+                }
+            }
+        },
+        "dto.UserGetByIdDto": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },
@@ -204,6 +322,22 @@ const docTemplate = `{
                 "CategoryFeed",
                 "CategoryStory"
             ]
+        },
+        "response.PostAPIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "message": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "payload": {
+                    "$ref": "#/definitions/ent.PostEntity"
+                }
+            }
         },
         "response.UserAPIResponse": {
             "type": "object",

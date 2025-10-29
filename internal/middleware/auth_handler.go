@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// AuthHandler -.
 func AuthHandler(j jwt.JWTManagerInterface, name string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token, err := ctx.Cookie(name)
@@ -17,7 +18,12 @@ func AuthHandler(j jwt.JWTManagerInterface, name string) gin.HandlerFunc {
 		}
 
 		claims, err := j.ParseToken(token)
-		if err != nil || claims.UserId == 0 {
+		if err != nil {
+			ctx.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
+			return
+		}
+
+		if claims == nil || claims.UserId == 0 {
 			ctx.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
 			return
 		}

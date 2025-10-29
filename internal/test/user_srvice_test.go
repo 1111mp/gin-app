@@ -32,7 +32,7 @@ func TestCreateUser(t *testing.T) {
 	userService := service.NewUserService(l, repo, jwt)
 
 	ctx := context.Background()
-	inputDto := dto.CreateOneUserDto{
+	inputDto := dto.UserCreateOneDto{
 		Name:     "Alice",
 		Email:    "alice@example.com",
 		Password: "verysecurepwd12",

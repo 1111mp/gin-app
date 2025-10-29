@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/1111mp/gin-app/ent/accesstoken"
 	"github.com/1111mp/gin-app/ent/post"
 	"github.com/1111mp/gin-app/ent/predicate"
 	"github.com/1111mp/gin-app/ent/user"
@@ -25,9 +26,762 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypePost = "Post"
-	TypeUser = "User"
+	TypeAccessToken = "AccessToken"
+	TypePost        = "Post"
+	TypeUser        = "User"
 )
+
+// AccessTokenMutation represents an operation that mutates the AccessToken nodes in the graph.
+type AccessTokenMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	create_time    *time.Time
+	update_time    *time.Time
+	name           *string
+	value          *string
+	owner          *int
+	addowner       *int
+	expire_time    *int64
+	addexpire_time *int64
+	creator        *int
+	addcreator     *int
+	clearedFields  map[string]struct{}
+	done           bool
+	oldValue       func(context.Context) (*AccessToken, error)
+	predicates     []predicate.AccessToken
+}
+
+var _ ent.Mutation = (*AccessTokenMutation)(nil)
+
+// accesstokenOption allows management of the mutation configuration using functional options.
+type accesstokenOption func(*AccessTokenMutation)
+
+// newAccessTokenMutation creates new mutation for the AccessToken entity.
+func newAccessTokenMutation(c config, op Op, opts ...accesstokenOption) *AccessTokenMutation {
+	m := &AccessTokenMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAccessToken,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAccessTokenID sets the ID field of the mutation.
+func withAccessTokenID(id int) accesstokenOption {
+	return func(m *AccessTokenMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *AccessToken
+		)
+		m.oldValue = func(ctx context.Context) (*AccessToken, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().AccessToken.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAccessToken sets the old AccessToken of the mutation.
+func withAccessToken(node *AccessToken) accesstokenOption {
+	return func(m *AccessTokenMutation) {
+		m.oldValue = func(context.Context) (*AccessToken, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AccessTokenMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AccessTokenMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *AccessTokenMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *AccessTokenMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().AccessToken.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *AccessTokenMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *AccessTokenMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the AccessToken entity.
+// If the AccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessTokenMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *AccessTokenMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *AccessTokenMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *AccessTokenMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the AccessToken entity.
+// If the AccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessTokenMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *AccessTokenMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetName sets the "name" field.
+func (m *AccessTokenMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *AccessTokenMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the AccessToken entity.
+// If the AccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessTokenMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *AccessTokenMutation) ResetName() {
+	m.name = nil
+}
+
+// SetValue sets the "value" field.
+func (m *AccessTokenMutation) SetValue(s string) {
+	m.value = &s
+}
+
+// Value returns the value of the "value" field in the mutation.
+func (m *AccessTokenMutation) Value() (r string, exists bool) {
+	v := m.value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValue returns the old "value" field's value of the AccessToken entity.
+// If the AccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessTokenMutation) OldValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
+	}
+	return oldValue.Value, nil
+}
+
+// ResetValue resets all changes to the "value" field.
+func (m *AccessTokenMutation) ResetValue() {
+	m.value = nil
+}
+
+// SetOwner sets the "owner" field.
+func (m *AccessTokenMutation) SetOwner(i int) {
+	m.owner = &i
+	m.addowner = nil
+}
+
+// Owner returns the value of the "owner" field in the mutation.
+func (m *AccessTokenMutation) Owner() (r int, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwner returns the old "owner" field's value of the AccessToken entity.
+// If the AccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessTokenMutation) OldOwner(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwner is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwner requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwner: %w", err)
+	}
+	return oldValue.Owner, nil
+}
+
+// AddOwner adds i to the "owner" field.
+func (m *AccessTokenMutation) AddOwner(i int) {
+	if m.addowner != nil {
+		*m.addowner += i
+	} else {
+		m.addowner = &i
+	}
+}
+
+// AddedOwner returns the value that was added to the "owner" field in this mutation.
+func (m *AccessTokenMutation) AddedOwner() (r int, exists bool) {
+	v := m.addowner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOwner resets all changes to the "owner" field.
+func (m *AccessTokenMutation) ResetOwner() {
+	m.owner = nil
+	m.addowner = nil
+}
+
+// SetExpireTime sets the "expire_time" field.
+func (m *AccessTokenMutation) SetExpireTime(i int64) {
+	m.expire_time = &i
+	m.addexpire_time = nil
+}
+
+// ExpireTime returns the value of the "expire_time" field in the mutation.
+func (m *AccessTokenMutation) ExpireTime() (r int64, exists bool) {
+	v := m.expire_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpireTime returns the old "expire_time" field's value of the AccessToken entity.
+// If the AccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessTokenMutation) OldExpireTime(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpireTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpireTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpireTime: %w", err)
+	}
+	return oldValue.ExpireTime, nil
+}
+
+// AddExpireTime adds i to the "expire_time" field.
+func (m *AccessTokenMutation) AddExpireTime(i int64) {
+	if m.addexpire_time != nil {
+		*m.addexpire_time += i
+	} else {
+		m.addexpire_time = &i
+	}
+}
+
+// AddedExpireTime returns the value that was added to the "expire_time" field in this mutation.
+func (m *AccessTokenMutation) AddedExpireTime() (r int64, exists bool) {
+	v := m.addexpire_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetExpireTime resets all changes to the "expire_time" field.
+func (m *AccessTokenMutation) ResetExpireTime() {
+	m.expire_time = nil
+	m.addexpire_time = nil
+}
+
+// SetCreator sets the "creator" field.
+func (m *AccessTokenMutation) SetCreator(i int) {
+	m.creator = &i
+	m.addcreator = nil
+}
+
+// Creator returns the value of the "creator" field in the mutation.
+func (m *AccessTokenMutation) Creator() (r int, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreator returns the old "creator" field's value of the AccessToken entity.
+// If the AccessToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccessTokenMutation) OldCreator(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreator is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreator requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreator: %w", err)
+	}
+	return oldValue.Creator, nil
+}
+
+// AddCreator adds i to the "creator" field.
+func (m *AccessTokenMutation) AddCreator(i int) {
+	if m.addcreator != nil {
+		*m.addcreator += i
+	} else {
+		m.addcreator = &i
+	}
+}
+
+// AddedCreator returns the value that was added to the "creator" field in this mutation.
+func (m *AccessTokenMutation) AddedCreator() (r int, exists bool) {
+	v := m.addcreator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCreator resets all changes to the "creator" field.
+func (m *AccessTokenMutation) ResetCreator() {
+	m.creator = nil
+	m.addcreator = nil
+}
+
+// Where appends a list predicates to the AccessTokenMutation builder.
+func (m *AccessTokenMutation) Where(ps ...predicate.AccessToken) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the AccessTokenMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *AccessTokenMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.AccessToken, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *AccessTokenMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *AccessTokenMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (AccessToken).
+func (m *AccessTokenMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AccessTokenMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.create_time != nil {
+		fields = append(fields, accesstoken.FieldCreateTime)
+	}
+	if m.update_time != nil {
+		fields = append(fields, accesstoken.FieldUpdateTime)
+	}
+	if m.name != nil {
+		fields = append(fields, accesstoken.FieldName)
+	}
+	if m.value != nil {
+		fields = append(fields, accesstoken.FieldValue)
+	}
+	if m.owner != nil {
+		fields = append(fields, accesstoken.FieldOwner)
+	}
+	if m.expire_time != nil {
+		fields = append(fields, accesstoken.FieldExpireTime)
+	}
+	if m.creator != nil {
+		fields = append(fields, accesstoken.FieldCreator)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AccessTokenMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case accesstoken.FieldCreateTime:
+		return m.CreateTime()
+	case accesstoken.FieldUpdateTime:
+		return m.UpdateTime()
+	case accesstoken.FieldName:
+		return m.Name()
+	case accesstoken.FieldValue:
+		return m.Value()
+	case accesstoken.FieldOwner:
+		return m.Owner()
+	case accesstoken.FieldExpireTime:
+		return m.ExpireTime()
+	case accesstoken.FieldCreator:
+		return m.Creator()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AccessTokenMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case accesstoken.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case accesstoken.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case accesstoken.FieldName:
+		return m.OldName(ctx)
+	case accesstoken.FieldValue:
+		return m.OldValue(ctx)
+	case accesstoken.FieldOwner:
+		return m.OldOwner(ctx)
+	case accesstoken.FieldExpireTime:
+		return m.OldExpireTime(ctx)
+	case accesstoken.FieldCreator:
+		return m.OldCreator(ctx)
+	}
+	return nil, fmt.Errorf("unknown AccessToken field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccessTokenMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case accesstoken.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case accesstoken.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case accesstoken.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case accesstoken.FieldValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValue(v)
+		return nil
+	case accesstoken.FieldOwner:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwner(v)
+		return nil
+	case accesstoken.FieldExpireTime:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpireTime(v)
+		return nil
+	case accesstoken.FieldCreator:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreator(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AccessToken field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AccessTokenMutation) AddedFields() []string {
+	var fields []string
+	if m.addowner != nil {
+		fields = append(fields, accesstoken.FieldOwner)
+	}
+	if m.addexpire_time != nil {
+		fields = append(fields, accesstoken.FieldExpireTime)
+	}
+	if m.addcreator != nil {
+		fields = append(fields, accesstoken.FieldCreator)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AccessTokenMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case accesstoken.FieldOwner:
+		return m.AddedOwner()
+	case accesstoken.FieldExpireTime:
+		return m.AddedExpireTime()
+	case accesstoken.FieldCreator:
+		return m.AddedCreator()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AccessTokenMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case accesstoken.FieldOwner:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOwner(v)
+		return nil
+	case accesstoken.FieldExpireTime:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddExpireTime(v)
+		return nil
+	case accesstoken.FieldCreator:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCreator(v)
+		return nil
+	}
+	return fmt.Errorf("unknown AccessToken numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AccessTokenMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AccessTokenMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AccessTokenMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown AccessToken nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AccessTokenMutation) ResetField(name string) error {
+	switch name {
+	case accesstoken.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case accesstoken.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case accesstoken.FieldName:
+		m.ResetName()
+		return nil
+	case accesstoken.FieldValue:
+		m.ResetValue()
+		return nil
+	case accesstoken.FieldOwner:
+		m.ResetOwner()
+		return nil
+	case accesstoken.FieldExpireTime:
+		m.ResetExpireTime()
+		return nil
+	case accesstoken.FieldCreator:
+		m.ResetCreator()
+		return nil
+	}
+	return fmt.Errorf("unknown AccessToken field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AccessTokenMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AccessTokenMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AccessTokenMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AccessTokenMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AccessTokenMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AccessTokenMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AccessTokenMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown AccessToken unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AccessTokenMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown AccessToken edge %s", name)
+}
 
 // PostMutation represents an operation that mutates the Post nodes in the graph.
 type PostMutation struct {

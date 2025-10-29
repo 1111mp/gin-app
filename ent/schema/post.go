@@ -15,6 +15,7 @@ type Post struct {
 	ent.Schema
 }
 
+// Annotations of the Post.
 func (Post) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		// Adding this annotation to the schema enables

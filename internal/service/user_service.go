@@ -15,7 +15,7 @@ import (
 
 // UserServiceInter -.
 type UserServiceInter interface {
-	CreateOne(ctx context.Context, dto dto.CreateOneUserDto) (*ent.UserEntity, string, error)
+	CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.UserEntity, string, error)
 	GetById(ctx context.Context, id int) (*ent.UserEntity, error)
 }
 
@@ -39,7 +39,7 @@ func NewUserService(l logger.Interface,
 }
 
 // CreateUser -.
-func (u *UserService) CreateOne(ctx context.Context, dto dto.CreateOneUserDto) (*ent.UserEntity, string, error) {
+func (u *UserService) CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.UserEntity, string, error) {
 	user, err := u.rep.CreateOne(ctx, dto)
 	if err != nil {
 		return nil, "", errors.WrapAPIError(

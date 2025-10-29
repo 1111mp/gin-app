@@ -8,6 +8,7 @@ import (
 // ApiGroup -.
 type ApiGroup struct {
 	UserApi UserApiInter
+	PostApi PostApiInter
 }
 
 // NewApiGroup -.
@@ -16,6 +17,9 @@ func NewApiGroup(s *service.ServiceGroup, cfg config.ConfigInterface) *ApiGroup 
 		UserApi: &UserApi{
 			cfg:         cfg,
 			userService: s.UserService,
+		},
+		PostApi: &PostApi{
+			postService: s.PostService,
 		},
 	}
 }

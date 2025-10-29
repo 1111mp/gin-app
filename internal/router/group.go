@@ -14,6 +14,7 @@ type RouterGroupInter interface {
 // RouterGroup -.
 type RouterGroup struct {
 	UserRouter UserRouterInter
+	PostRouter PostRouterInter
 }
 
 // NewRouterGroup -.
@@ -23,21 +24,32 @@ func NewRouterGroup(a *api.ApiGroup) *RouterGroup {
 		&UserRouter{
 			userApi: a.UserApi,
 		},
+		&PostRouter{
+			postApi: a.PostApi,
+		},
 	}
 }
 
 // RegisterPublicRoutes -.
 func (r *RouterGroup) RegisterPublicRoutes(group *gin.RouterGroup) {
-	// user
+	// users
 	{
 		r.UserRouter.RegisterPublicRoutes(group)
+	}
+	// posts
+	{
+		r.PostRouter.RegisterPublicRoutes(group)
 	}
 }
 
 // RegisterPublicRoutes -.
 func (r *RouterGroup) RegisterPrivateRoutes(group *gin.RouterGroup) {
-	// user
+	// users
 	{
 		r.UserRouter.RegisterPrivateRoutes(group)
+	}
+	// posts
+	{
+		r.PostRouter.RegisterPrivateRoutes(group)
 	}
 }

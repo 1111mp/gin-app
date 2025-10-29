@@ -8,6 +8,31 @@ import (
 )
 
 var (
+	// AccessTokensColumns holds the columns for the "access_tokens" table.
+	AccessTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "value", Type: field.TypeString},
+		{Name: "owner", Type: field.TypeInt},
+		{Name: "expire_time", Type: field.TypeInt64},
+		{Name: "creator", Type: field.TypeInt},
+	}
+	// AccessTokensTable holds the schema information for the "access_tokens" table.
+	AccessTokensTable = &schema.Table{
+		Name:       "access_tokens",
+		Comment:    "AccessToken table stores all access token information.",
+		Columns:    AccessTokensColumns,
+		PrimaryKey: []*schema.Column{AccessTokensColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "accesstoken_owner_creator",
+				Unique:  false,
+				Columns: []*schema.Column{AccessTokensColumns[5], AccessTokensColumns[7]},
+			},
+		},
+	}
 	// PostsColumns holds the columns for the "posts" table.
 	PostsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -65,6 +90,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AccessTokensTable,
 		PostsTable,
 		UsersTable,
 	}

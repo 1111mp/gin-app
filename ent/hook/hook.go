@@ -9,6 +9,18 @@ import (
 	"github.com/1111mp/gin-app/ent"
 )
 
+// The AccessTokenFunc type is an adapter to allow the use of ordinary
+// function as AccessToken mutator.
+type AccessTokenFunc func(context.Context, *ent.AccessTokenMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccessTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AccessTokenMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccessTokenMutation", m)
+}
+
 // The PostFunc type is an adapter to allow the use of ordinary
 // function as Post mutator.
 type PostFunc func(context.Context, *ent.PostMutation) (ent.Value, error)

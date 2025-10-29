@@ -26,11 +26,11 @@ type UserApi struct {
 // CreateOne godoc
 // @Summary 		Create a new user
 // @Description Creates a new user account
-// @ID          CreateOne
+// @ID          UserCreateOne
 // @Tags 				Users
 // @Accept 			json
 // @Produce 		json
-// @Param 			data body dto.CreateOneUserDto true "User data"
+// @Param 			data body dto.UserGetByIdDto true "User data"
 // @Success 		200 {object} response.UserAPIResponse "User created successfully"
 // @Failure     400 {object} errors.APIError "Bad request (invalid params)"
 // @Failure     500 {object} errors.APIError "Internal server error"
@@ -38,7 +38,7 @@ type UserApi struct {
 func (u *UserApi) CreateOne(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	var dto dto.CreateOneUserDto
+	var dto dto.UserCreateOneDto
 	if err := c.ShouldBindJSON(&dto); err != nil {
 		c.Error(
 			errors.NewAPIError(
@@ -55,6 +55,7 @@ func (u *UserApi) CreateOne(c *gin.Context) {
 		return
 	}
 
+	// set cookie
 	c.SetCookie(u.cfg.HTTP().CookieName, token, 3600, "/", "", true, true)
 
 	response.WriteSuccess(c, user)
@@ -76,7 +77,7 @@ func (u *UserApi) CreateOne(c *gin.Context) {
 func (u *UserApi) GetById(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	var params dto.GetUserByIdParams
+	var params dto.UserGetByIdDto
 	if err := c.ShouldBindUri(&params); err != nil {
 		c.Error(
 			errors.NewAPIError(
@@ -88,7 +89,6 @@ func (u *UserApi) GetById(c *gin.Context) {
 	}
 
 	user, err := u.userService.GetById(ctx, params.ID)
-
 	if err != nil {
 		c.Error(err)
 		return
