@@ -6,7 +6,7 @@ import (
 
 	ent "github.com/1111mp/gin-app/ent"
 	dto "github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/internal/service"
+	api_service "github.com/1111mp/gin-app/internal/service/api"
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -29,7 +29,7 @@ func TestCreateUser(t *testing.T) {
 	repo := NewMockUserRepositoryInter(ctrl)
 	jwt := NewMockJWTManagerInterface(ctrl)
 	l := logger.New("", "debug")
-	userService := service.NewUserService(l, repo, jwt)
+	userService := api_service.NewUserService(l, repo, jwt)
 
 	ctx := context.Background()
 	inputDto := dto.UserCreateOneDto{

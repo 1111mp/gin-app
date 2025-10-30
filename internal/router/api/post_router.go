@@ -1,4 +1,4 @@
-package router
+package api_router
 
 import (
 	api "github.com/1111mp/gin-app/internal/api/v1"

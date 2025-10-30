@@ -327,7 +327,8 @@ func (c *AccessTokenClient) GetX(ctx context.Context, id int) *AccessToken {
 
 // Hooks returns the client hooks.
 func (c *AccessTokenClient) Hooks() []Hook {
-	return c.hooks.AccessToken
+	hooks := c.hooks.AccessToken
+	return append(hooks[:len(hooks):len(hooks)], accesstoken.Hooks[:]...)
 }
 
 // Interceptors returns the client interceptors.

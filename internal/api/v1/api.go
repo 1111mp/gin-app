@@ -1,25 +1,29 @@
-package v1
+package api_v1
 
 import (
 	"github.com/1111mp/gin-app/config"
-	"github.com/1111mp/gin-app/internal/service"
+	api_service "github.com/1111mp/gin-app/internal/service/api"
 )
 
 // ApiGroup -.
 type ApiGroup struct {
-	UserApi UserApiInter
-	PostApi PostApiInter
+	UserApi        UserApiInter
+	PostApi        PostApiInter
+	AccessTokenApi AccessTokenApiInter
 }
 
 // NewApiGroup -.
-func NewApiGroup(s *service.ServiceGroup, cfg config.ConfigInterface) *ApiGroup {
+func NewApiGroup(s *api_service.ServiceGroup, cfg config.ConfigInterface) *ApiGroup {
 	return &ApiGroup{
-		UserApi: &UserApi{
+		&UserApi{
 			cfg:         cfg,
 			userService: s.UserService,
 		},
-		PostApi: &PostApi{
+		&PostApi{
 			postService: s.PostService,
+		},
+		&AccessTokenApi{
+			accessTokenService: s.AccessTokenService,
 		},
 	}
 }

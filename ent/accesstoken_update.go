@@ -132,7 +132,9 @@ func (_u *AccessTokenUpdate) Mutation() *AccessTokenMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *AccessTokenUpdate) Save(ctx context.Context) (int, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return 0, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -159,11 +161,15 @@ func (_u *AccessTokenUpdate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *AccessTokenUpdate) defaults() {
+func (_u *AccessTokenUpdate) defaults() error {
 	if _, ok := _u.mutation.UpdateTime(); !ok {
+		if accesstoken.UpdateDefaultUpdateTime == nil {
+			return fmt.Errorf("ent: uninitialized accesstoken.UpdateDefaultUpdateTime (forgotten import ent/runtime?)")
+		}
 		v := accesstoken.UpdateDefaultUpdateTime()
 		_u.mutation.SetUpdateTime(v)
 	}
+	return nil
 }
 
 func (_u *AccessTokenUpdate) sqlSave(ctx context.Context) (_node int, err error) {
@@ -339,7 +345,9 @@ func (_u *AccessTokenUpdateOne) Select(field string, fields ...string) *AccessTo
 
 // Save executes the query and returns the updated AccessToken entity.
 func (_u *AccessTokenUpdateOne) Save(ctx context.Context) (*AccessToken, error) {
-	_u.defaults()
+	if err := _u.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -366,11 +374,15 @@ func (_u *AccessTokenUpdateOne) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_u *AccessTokenUpdateOne) defaults() {
+func (_u *AccessTokenUpdateOne) defaults() error {
 	if _, ok := _u.mutation.UpdateTime(); !ok {
+		if accesstoken.UpdateDefaultUpdateTime == nil {
+			return fmt.Errorf("ent: uninitialized accesstoken.UpdateDefaultUpdateTime (forgotten import ent/runtime?)")
+		}
 		v := accesstoken.UpdateDefaultUpdateTime()
 		_u.mutation.SetUpdateTime(v)
 	}
+	return nil
 }
 
 func (_u *AccessTokenUpdateOne) sqlSave(ctx context.Context) (_node *AccessToken, err error) {

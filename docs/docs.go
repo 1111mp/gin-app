@@ -15,6 +15,53 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/access-tokens": {
+            "post": {
+                "description": "Creates a new access token resource",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AccessTokens"
+                ],
+                "summary": "Create a new access token",
+                "operationId": "AccessTokenCreateOne",
+                "parameters": [
+                    {
+                        "description": "AccessToken data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AccessTokenCreateOneDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Post created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.AccessTokenAPIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid params)",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/posts": {
             "post": {
                 "description": "Creates a new post resource",
@@ -213,6 +260,25 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.AccessTokenCreateOneDto": {
+            "type": "object",
+            "required": [
+                "expireTime",
+                "name",
+                "owner"
+            ],
+            "properties": {
+                "expireTime": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.PostCreateOneDto": {
             "type": "object",
             "required": [
@@ -249,6 +315,29 @@ const docTemplate = `{
                 "id": {
                     "type": "integer",
                     "minimum": 1
+                }
+            }
+        },
+        "ent.AccessTokenEntity": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "integer"
+                },
+                "updateTime": {
+                    "type": "string"
                 }
             }
         },
@@ -322,6 +411,22 @@ const docTemplate = `{
                 "CategoryFeed",
                 "CategoryStory"
             ]
+        },
+        "response.AccessTokenAPIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "message": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "payload": {
+                    "$ref": "#/definitions/ent.AccessTokenEntity"
+                }
+            }
         },
         "response.PostAPIResponse": {
             "type": "object",

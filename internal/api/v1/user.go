@@ -1,11 +1,11 @@
-package v1
+package api_v1
 
 import (
 	"net/http"
 
 	"github.com/1111mp/gin-app/config"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/internal/service"
+	api_service "github.com/1111mp/gin-app/internal/service/api"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ type UserApiInter interface {
 // UserApi -.
 type UserApi struct {
 	cfg         config.ConfigInterface
-	userService service.UserServiceInter
+	userService api_service.UserServiceInter
 }
 
 // CreateOne godoc

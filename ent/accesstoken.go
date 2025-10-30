@@ -24,7 +24,7 @@ type AccessToken struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Value holds the value of the "value" field.
-	Value string `json:"value,omitempty"`
+	Value string `json:"-"`
 	// Owner holds the value of the "owner" field.
 	Owner int `json:"owner,omitempty"`
 	// ExpireTime holds the value of the "expire_time" field.
@@ -153,8 +153,7 @@ func (_m *AccessToken) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
-	builder.WriteString("value=")
-	builder.WriteString(_m.Value)
+	builder.WriteString("value=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("owner=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Owner))

@@ -1,4 +1,4 @@
-package router
+package api_router
 
 import (
 	api "github.com/1111mp/gin-app/internal/api/v1"
@@ -6,32 +6,36 @@ import (
 )
 
 // RouterGroupInter -.
-type RouterGroupInter interface {
+type ApiRouterGroupInter interface {
 	RegisterPublicRoutes(group *gin.RouterGroup)
 	RegisterPrivateRoutes(group *gin.RouterGroup)
 }
 
 // RouterGroup -.
-type RouterGroup struct {
-	UserRouter UserRouterInter
-	PostRouter PostRouterInter
+type ApiRouterGroup struct {
+	UserRouter        UserRouterInter
+	PostRouter        PostRouterInter
+	AccessTokenRouter AccessTokenRouterInter
 }
 
 // NewRouterGroup -.
-func NewRouterGroup(a *api.ApiGroup) *RouterGroup {
+func NewRouterGroup(a *api.ApiGroup) *ApiRouterGroup {
 
-	return &RouterGroup{
+	return &ApiRouterGroup{
 		&UserRouter{
 			userApi: a.UserApi,
 		},
 		&PostRouter{
 			postApi: a.PostApi,
 		},
+		&AccessTokenRouter{
+			accessTokenApi: a.AccessTokenApi,
+		},
 	}
 }
 
 // RegisterPublicRoutes -.
-func (r *RouterGroup) RegisterPublicRoutes(group *gin.RouterGroup) {
+func (r *ApiRouterGroup) RegisterPublicRoutes(group *gin.RouterGroup) {
 	// users
 	{
 		r.UserRouter.RegisterPublicRoutes(group)
@@ -40,10 +44,14 @@ func (r *RouterGroup) RegisterPublicRoutes(group *gin.RouterGroup) {
 	{
 		r.PostRouter.RegisterPublicRoutes(group)
 	}
+	// access-tokens
+	{
+		r.AccessTokenRouter.RegisterPublicRoutes(group)
+	}
 }
 
 // RegisterPublicRoutes -.
-func (r *RouterGroup) RegisterPrivateRoutes(group *gin.RouterGroup) {
+func (r *ApiRouterGroup) RegisterPrivateRoutes(group *gin.RouterGroup) {
 	// users
 	{
 		r.UserRouter.RegisterPrivateRoutes(group)
@@ -51,5 +59,9 @@ func (r *RouterGroup) RegisterPrivateRoutes(group *gin.RouterGroup) {
 	// posts
 	{
 		r.PostRouter.RegisterPrivateRoutes(group)
+	}
+	// access-tokens
+	{
+		r.AccessTokenRouter.RegisterPrivateRoutes(group)
 	}
 }

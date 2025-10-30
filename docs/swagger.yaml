@@ -1,4 +1,17 @@
 definitions:
+  dto.AccessTokenCreateOneDto:
+    properties:
+      expireTime:
+        type: integer
+      name:
+        type: string
+      owner:
+        type: integer
+    required:
+    - expireTime
+    - name
+    - owner
+    type: object
   dto.PostCreateOneDto:
     properties:
       category:
@@ -23,6 +36,21 @@ definitions:
         type: integer
     required:
     - id
+    type: object
+  ent.AccessTokenEntity:
+    properties:
+      createTime:
+        type: string
+      creator:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      owner:
+        type: integer
+      updateTime:
+        type: string
     type: object
   ent.PostEntity:
     properties:
@@ -71,6 +99,17 @@ definitions:
     x-enum-varnames:
     - CategoryFeed
     - CategoryStory
+  response.AccessTokenAPIResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: success
+        type: string
+      payload:
+        $ref: '#/definitions/ent.AccessTokenEntity'
+    type: object
   response.PostAPIResponse:
     properties:
       code:
@@ -100,6 +139,37 @@ info:
   title: Go Clean Template API
   version: "1.0"
 paths:
+  /api/v1/access-tokens:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new access token resource
+      operationId: AccessTokenCreateOne
+      parameters:
+      - description: AccessToken data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AccessTokenCreateOneDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post created successfully
+          schema:
+            $ref: '#/definitions/response.AccessTokenAPIResponse'
+        "400":
+          description: Bad request (invalid params)
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      summary: Create a new access token
+      tags:
+      - AccessTokens
   /api/v1/posts:
     post:
       consumes:

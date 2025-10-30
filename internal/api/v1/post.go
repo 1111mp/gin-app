@@ -1,10 +1,10 @@
-package v1
+package api_v1
 
 import (
 	"net/http"
 
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/internal/service"
+	api_service "github.com/1111mp/gin-app/internal/service/api"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ type PostApiInter interface {
 
 // PostApi -.
 type PostApi struct {
-	postService service.PostServiceInter
+	postService api_service.PostServiceInter
 }
 
 // CreateOne godoc

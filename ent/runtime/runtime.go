@@ -16,6 +16,8 @@ import (
 // to their package variables.
 func init() {
 	accesstokenMixin := schema.AccessToken{}.Mixin()
+	accesstokenHooks := schema.AccessToken{}.Hooks()
+	accesstoken.Hooks[0] = accesstokenHooks[0]
 	accesstokenMixinFields0 := accesstokenMixin[0].Fields()
 	_ = accesstokenMixinFields0
 	accesstokenFields := schema.AccessToken{}.Fields()

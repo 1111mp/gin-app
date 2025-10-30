@@ -1,12 +1,18 @@
 package schema
 
 import (
+	"context"
+	"strings"
+
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
+	"github.com/1111mp/gin-app/ent/hook"
+	"github.com/1111mp/gin-app/ent/schema/schematype"
+	"github.com/google/uuid"
 )
 
 // Annotations of the AccessToken.
@@ -52,5 +58,27 @@ func (AccessToken) Edges() []ent.Edge {
 func (AccessToken) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("owner", "creator"),
+	}
+}
+
+// Hooks of the AccessToken.
+func (AccessToken) Hooks() []ent.Hook {
+	return []ent.Hook{
+		// Automatically populate token value when creating a new instance
+		hook.On(
+			func(next ent.Mutator) ent.Mutator {
+				return hook.AccessTokenFunc(
+					func(ctx context.Context, m *schematype.AccessTokenMutation) (ent.Value, error) {
+						val, ok := m.Value()
+						if !ok || val == "" {
+							m.SetValue(strings.ReplaceAll(uuid.New().String(), "-", ""))
+						}
+
+						return next.Mutate(ctx, m)
+					},
+				)
+			},
+			ent.OpCreate,
+		),
 	}
 }

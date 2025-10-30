@@ -2,27 +2,17 @@ package service
 
 import (
 	"github.com/1111mp/gin-app/internal/repository"
+	api_service "github.com/1111mp/gin-app/internal/service/api"
+	openapi_service "github.com/1111mp/gin-app/internal/service/open-api"
 	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/1111mp/gin-app/pkg/logger"
 )
 
-// ServiceGroup -.
-type ServiceGroup struct {
-	UserService UserServiceInter
-	PostService PostServiceInter
-}
-
 // NewServiceGroup -.
-func NewServiceGroup(r *repository.RepositoryGroup, j jwt.JWTManagerInterface, l logger.Interface) *ServiceGroup {
-	return &ServiceGroup{
-		&UserService{
-			l:   l,
-			rep: r.UserRepository,
-			jwt: j,
-		},
-		&PostService{
-			l:   l,
-			rep: r.PostRepository,
-		},
-	}
+func NewServiceGroup(
+	r *repository.RepositoryGroup,
+	j jwt.JWTManagerInterface,
+	l logger.Interface,
+) (*api_service.ServiceGroup, *openapi_service.ServiceGroup) {
+	return api_service.NewServiceGroup(r, j, l), openapi_service.NewServiceGroup(r, j, l)
 }

@@ -85,7 +85,9 @@ func (_c *AccessTokenCreate) Mutation() *AccessTokenMutation {
 
 // Save creates the AccessToken in the database.
 func (_c *AccessTokenCreate) Save(ctx context.Context) (*AccessToken, error) {
-	_c.defaults()
+	if err := _c.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -112,15 +114,22 @@ func (_c *AccessTokenCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *AccessTokenCreate) defaults() {
+func (_c *AccessTokenCreate) defaults() error {
 	if _, ok := _c.mutation.CreateTime(); !ok {
+		if accesstoken.DefaultCreateTime == nil {
+			return fmt.Errorf("ent: uninitialized accesstoken.DefaultCreateTime (forgotten import ent/runtime?)")
+		}
 		v := accesstoken.DefaultCreateTime()
 		_c.mutation.SetCreateTime(v)
 	}
 	if _, ok := _c.mutation.UpdateTime(); !ok {
+		if accesstoken.DefaultUpdateTime == nil {
+			return fmt.Errorf("ent: uninitialized accesstoken.DefaultUpdateTime (forgotten import ent/runtime?)")
+		}
 		v := accesstoken.DefaultUpdateTime()
 		_c.mutation.SetUpdateTime(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.

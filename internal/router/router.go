@@ -8,9 +8,12 @@ import (
 
 	"github.com/1111mp/gin-app/config"
 	_ "github.com/1111mp/gin-app/docs"
-	api "github.com/1111mp/gin-app/internal/api/v1"
+	api_v1 "github.com/1111mp/gin-app/internal/api/v1"
 	"github.com/1111mp/gin-app/internal/middleware"
+	openapi_v1 "github.com/1111mp/gin-app/internal/open-api/v1"
 	"github.com/1111mp/gin-app/internal/repository"
+	api_router "github.com/1111mp/gin-app/internal/router/api"
+	openapi_router "github.com/1111mp/gin-app/internal/router/open-api"
 	"github.com/1111mp/gin-app/internal/service"
 	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/1111mp/gin-app/pkg/logger"
@@ -38,7 +41,7 @@ func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgre
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "X-Request-ID"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "X-Request-ID", "PRIVATE-TOKEN"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
 			return origin == "http://localhost:8080"
@@ -88,16 +91,25 @@ func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgre
 
 	j := jwt.NewJWTManager(jwt.Issuer(cfg.App().Name), jwt.Secret(cfg.JWT().SECRET))
 	rep := repository.NewRepositoryGroup(pg)
-	s := service.NewServiceGroup(rep, j, l)
-	a := api.NewApiGroup(s, cfg)
-	r := NewRouterGroup(a)
+	apiService, openApiService := service.NewServiceGroup(rep, j, l)
 
 	// Routes
-	publicV1Api := app.Group("/api/v1")
-	privateV1Api := publicV1Api.Group("/")
-	privateV1Api.Use(middleware.AuthHandler(j, cfg.HTTP().CookieName))
+	api := api_v1.NewApiGroup(apiService, cfg)
+	apiRouter := api_router.NewRouterGroup(api)
+	publicApiV1 := app.Group("/api/v1")
+	privateApiV1 := publicApiV1.Group("/")
+	privateApiV1.Use(middleware.APIAuthHandler(j, cfg.HTTP().CookieName))
 	{
-		r.RegisterPublicRoutes(publicV1Api)
-		r.RegisterPrivateRoutes(privateV1Api)
+		apiRouter.RegisterPublicRoutes(publicApiV1)
+		apiRouter.RegisterPrivateRoutes(privateApiV1)
+	}
+
+	// OpenApi Routes
+	openApi := openapi_v1.NewApiGroup(openApiService)
+	openApiRouter := openapi_router.NewRouterGroup(openApi)
+	openApiGroup := app.Group("/open-api/v1")
+	openApiGroup.Use(middleware.OpenAPIAuthHandler(pg))
+	{
+		openApiRouter.RegisterRoutes(openApiGroup)
 	}
 }
