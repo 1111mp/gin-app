@@ -14,7 +14,11 @@ type ServiceGroup struct {
 }
 
 // NewServiceGroup -.
-func NewServiceGroup(r *repository.RepositoryGroup, j jwt.JWTManagerInterface, l logger.Interface) *ServiceGroup {
+func NewServiceGroup(
+	r *repository.RepositoryGroup,
+	j jwt.JWTManagerInterface,
+	l logger.Interface,
+) *ServiceGroup {
 	return &ServiceGroup{
 		&UserService{
 			l:   l,

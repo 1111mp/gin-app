@@ -110,6 +110,19 @@ definitions:
       payload:
         $ref: '#/definitions/ent.AccessTokenEntity'
     type: object
+  response.AccessTokenListAPIResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      message:
+        example: success
+        type: string
+      payload:
+        items:
+          $ref: '#/definitions/ent.AccessTokenEntity'
+        type: array
+    type: object
   response.PostAPIResponse:
     properties:
       code:
@@ -140,6 +153,25 @@ info:
   version: "1.0"
 paths:
   /api/v1/access-tokens:
+    get:
+      description: Retrieves access tokens owned by the authenticated user
+      operationId: AccessTokenGetSelfTokens
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of access tokens
+          schema:
+            $ref: '#/definitions/response.AccessTokenListAPIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      security:
+      - APIAuth: []
+      summary: Get self access tokens
+      tags:
+      - AccessTokens
     post:
       consumes:
       - application/json
@@ -167,7 +199,39 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/errors.APIError'
+      security:
+      - APIAuth: []
       summary: Create a new access token
+      tags:
+      - AccessTokens
+  /api/v1/access-tokens/{owner}:
+    get:
+      description: Retrieves access tokens owned by the specified user
+      operationId: AccessTokenGetByOwner
+      parameters:
+      - description: Owner ID
+        in: path
+        name: owner
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of access tokens
+          schema:
+            $ref: '#/definitions/response.AccessTokenListAPIResponse'
+        "400":
+          description: Bad request (invalid ID)
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      security:
+      - APIAuth: []
+      summary: Get access tokens by owner
       tags:
       - AccessTokens
   /api/v1/posts:
@@ -198,6 +262,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/errors.APIError'
+      security:
+      - APIAuth: []
       summary: Create a new post
       tags:
       - Posts
@@ -232,6 +298,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/errors.APIError'
+      security:
+      - APIAuth: []
       summary: Get post by ID
       tags:
       - Posts
@@ -297,7 +365,18 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/errors.APIError'
+      security:
+      - APIAuth: []
       summary: Get user by ID
       tags:
       - Users
+securityDefinitions:
+  APIAuth:
+    in: cookie
+    name: app_cookie_name
+    type: apiKey
+  OpenAPIAuth:
+    in: header
+    name: PRIVATE-TOKEN
+    type: apiKey
 swagger: "2.0"

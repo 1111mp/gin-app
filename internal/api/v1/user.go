@@ -62,6 +62,7 @@ func (u *UserApi) CreateOne(c *gin.Context) {
 }
 
 // GetById godoc
+// @Security 		APIAuth
 // @Summary     Get user by ID
 // @Description Retrieve user information by given user ID
 // @ID          getUserById

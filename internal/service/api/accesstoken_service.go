@@ -13,6 +13,7 @@ import (
 // AccessTokenServiceInter -.
 type AccessTokenServiceInter interface {
 	CreateOne(ctx context.Context, userId int, dto dto.AccessTokenCreateOneDto) (*ent.AccessTokenEntity, error)
+	GetByOwner(ctx context.Context, owner int) ([]*ent.AccessTokenEntity, error)
 }
 
 // AccessTokenService -.
@@ -35,4 +36,25 @@ func (a *AccessTokenService) CreateOne(ctx context.Context, userId int, dto dto.
 	}
 
 	return accessToken.IntoEntity(), nil
+}
+
+// GetByOwner -.
+func (a *AccessTokenService) GetByOwner(ctx context.Context, owner int) ([]*ent.AccessTokenEntity, error) {
+	accessTokens, err := a.rep.GetByOwner(ctx, owner)
+	if err != nil {
+		return nil, errors.WrapAPIError(
+			errors.ErrInternalServerError,
+			errors.NewRepositoryError(
+				err.Error(),
+				err,
+			),
+		)
+	}
+
+	var entities []*ent.AccessTokenEntity
+	for _, accessToken := range accessTokens {
+		entities = append(entities, accessToken.IntoEntity())
+	}
+
+	return entities, nil
 }

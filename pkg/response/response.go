@@ -23,6 +23,6 @@ func Success[T any](payload *T) *APIResponse[T] {
 }
 
 // WriteSuccess -.
-func WriteSuccess[T any](c *gin.Context, payload *T) {
-	c.JSON(http.StatusOK, Success(payload))
+func WriteSuccess[T any](c *gin.Context, payload T) {
+	c.JSON(http.StatusOK, Success(&payload))
 }

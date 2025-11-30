@@ -11,7 +11,7 @@ import (
 
 //go:generate mockgen -source=interfaces.go -destination=../service/mocks_user_test.go -package=service_test
 
-// UserRepository -.
+// UserRepositoryInter -.
 type UserRepositoryInter interface {
 	CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.User, error)
 	GetById(ctx context.Context, id int) (*ent.User, error)

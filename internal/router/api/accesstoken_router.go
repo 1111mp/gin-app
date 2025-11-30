@@ -29,5 +29,8 @@ func (u *AccessTokenRouter) RegisterPrivateRoutes(group *gin.RouterGroup) {
 	accessTokenGroup := group.Group("/access-tokens")
 	{
 		accessTokenGroup.POST("", utils.HandlerWithUser(u.accessTokenApi.CreateOne))
+
+		accessTokenGroup.GET("", utils.HandlerWithUser(u.accessTokenApi.GetSelfTokens))
+		accessTokenGroup.GET("/:owner", u.accessTokenApi.GetTokensByOwner)
 	}
 }

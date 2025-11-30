@@ -5,13 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RouterGroupInter -.
+// ApiRouterGroupInter -.
 type ApiRouterGroupInter interface {
 	RegisterPublicRoutes(group *gin.RouterGroup)
 	RegisterPrivateRoutes(group *gin.RouterGroup)
 }
 
-// RouterGroup -.
+// ApiRouterGroup -.
 type ApiRouterGroup struct {
 	UserRouter        UserRouterInter
 	PostRouter        PostRouterInter

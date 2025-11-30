@@ -36,6 +36,14 @@ import (
 // @description This is a sample server Petstore server.
 // @version 		1.0
 // @host 				localhost:8080
+
+// @securityDefinitions.apikey APIAuth
+// @in												cookie
+// @name											app_cookie_name
+
+// @securityDefinitions.apikey OpenAPIAuth
+// @in												header
+// @name											PRIVATE-TOKEN
 func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgres, l *logger.Logger) {
 	// apply middlewares
 	app.Use(requestid.New())
@@ -93,23 +101,33 @@ func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgre
 	rep := repository.NewRepositoryGroup(pg)
 	apiService, openApiService := service.NewServiceGroup(rep, j, l)
 
-	// Routes
-	api := api_v1.NewApiGroup(apiService, cfg)
-	apiRouter := api_router.NewRouterGroup(api)
-	publicApiV1 := app.Group("/api/v1")
-	privateApiV1 := publicApiV1.Group("/")
-	privateApiV1.Use(middleware.APIAuthHandler(j, cfg.HTTP().CookieName))
+	// Api Routes
 	{
+		publicApiV1 := app.Group("/api/v1")
+		privateApiV1 := publicApiV1.Group("/")
+
+		api := api_v1.NewApiGroup(apiService, cfg)
+		apiRouter := api_router.NewRouterGroup(api)
+
+		// apply auth middleware
+		privateApiV1.Use(middleware.APIAuthHandler(j, cfg.HTTP().CookieName))
+
+		// register routes
 		apiRouter.RegisterPublicRoutes(publicApiV1)
 		apiRouter.RegisterPrivateRoutes(privateApiV1)
 	}
 
 	// OpenApi Routes
-	openApi := openapi_v1.NewApiGroup(openApiService)
-	openApiRouter := openapi_router.NewRouterGroup(openApi)
-	openApiGroup := app.Group("/open-api/v1")
-	openApiGroup.Use(middleware.OpenAPIAuthHandler(pg))
 	{
+		openApiGroup := app.Group("/open-api/v1")
+
+		openApi := openapi_v1.NewApiGroup(openApiService)
+		openApiRouter := openapi_router.NewRouterGroup(openApi)
+
+		// apply auth middleware
+		openApiGroup.Use(middleware.OpenAPIAuthHandler(pg))
+
+		// register routes
 		openApiRouter.RegisterRoutes(openApiGroup)
 	}
 }

@@ -16,6 +16,36 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/v1/access-tokens": {
+            "get": {
+                "description": "Retrieves access tokens owned by the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AccessTokens"
+                ],
+                "summary": "Get self access tokens",
+                "operationId": "AccessTokenGetSelfTokens",
+                "responses": {
+                    "200": {
+                        "description": "List of access tokens",
+                        "schema": {
+                            "$ref": "#/definitions/response.AccessTokenListAPIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIAuth": []
+                    }
+                ]
+            },
             "post": {
                 "description": "Creates a new access token resource",
                 "consumes": [
@@ -59,7 +89,59 @@ const docTemplate = `{
                             "$ref": "#/definitions/errors.APIError"
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "APIAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/access-tokens/{owner}": {
+            "get": {
+                "description": "Retrieves access tokens owned by the specified user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AccessTokens"
+                ],
+                "summary": "Get access tokens by owner",
+                "operationId": "AccessTokenGetByOwner",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Owner ID",
+                        "name": "owner",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of access tokens",
+                        "schema": {
+                            "$ref": "#/definitions/response.AccessTokenListAPIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid ID)",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "APIAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/posts": {
@@ -106,7 +188,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/errors.APIError"
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "APIAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/posts/{id}": {
@@ -157,7 +244,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/errors.APIError"
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "APIAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/users": {
@@ -255,7 +347,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/errors.APIError"
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "APIAuth": []
+                    }
+                ]
             }
         }
     },
@@ -428,6 +525,25 @@ const docTemplate = `{
                 }
             }
         },
+        "response.AccessTokenListAPIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "message": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "payload": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.AccessTokenEntity"
+                    }
+                }
+            }
+        },
         "response.PostAPIResponse": {
             "type": "object",
             "properties": {
@@ -459,6 +575,18 @@ const docTemplate = `{
                     "$ref": "#/definitions/ent.UserEntity"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "APIAuth": {
+            "type": "apiKey",
+            "name": "app_cookie_name",
+            "in": "cookie"
+        },
+        "OpenAPIAuth": {
+            "type": "apiKey",
+            "name": "PRIVATE-TOKEN",
+            "in": "header"
         }
     }
 }`

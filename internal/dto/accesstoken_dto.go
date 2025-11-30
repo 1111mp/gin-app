@@ -6,3 +6,8 @@ type AccessTokenCreateOneDto struct {
 	Owner      int    `json:"owner" binding:"required"`
 	ExpireTime int64  `json:"expireTime" binding:"required"`
 }
+
+// AccessTokenGetByOwnerDto -.
+type AccessTokenGetByOwnerDto struct {
+	Owner int `uri:"owner" binding:"required,min=1"`
+}

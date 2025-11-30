@@ -22,6 +22,7 @@ type PostApi struct {
 }
 
 // CreateOne godoc
+// @Security 		APIAuth
 // @Summary 		Create a new post
 // @Description Creates a new post resource
 // @ID          PostCreateOne
@@ -57,6 +58,7 @@ func (p *PostApi) CreateOne(c *gin.Context, userId int) {
 }
 
 // GetById godoc
+// @Security 		APIAuth
 // @Summary			Get post by ID
 // @Description	Retrieve post information by given post ID
 // @ID					GetPostById
