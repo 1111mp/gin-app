@@ -6,10 +6,10 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/ent/user"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/pkg/postgres"
+	"github.com/1111mp/gin-app/pkg/state"
 )
 
-//go:generate mockgen -source=interfaces.go -destination=../service/mocks_user_test.go -package=service_test
+//go:generate mockgen -source=user_repository.go -destination=../service/api/mocks_user_repo_test.go -package=api_service_test
 
 // UserRepositoryInter -.
 type UserRepositoryInter interface {
@@ -19,7 +19,7 @@ type UserRepositoryInter interface {
 
 // UserRepository -.
 type UserRepository struct {
-	pg *postgres.Postgres
+	appState *state.AppState
 }
 
 // CreateOne -.
@@ -27,7 +27,7 @@ func (u *UserRepository) CreateOne(
 	ctx context.Context,
 	dto dto.UserCreateOneDto,
 ) (*ent.User, error) {
-	return u.pg.Client.User.
+	return u.appState.PG.Client.User.
 		Create().
 		SetName(dto.Name).
 		SetEmail(dto.Email).
@@ -40,7 +40,7 @@ func (u *UserRepository) GetById(
 	ctx context.Context,
 	id int,
 ) (*ent.User, error) {
-	return u.pg.Client.User.
+	return u.appState.PG.Client.User.
 		Query().
 		WithPosts().
 		Where(

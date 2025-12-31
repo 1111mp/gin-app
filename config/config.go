@@ -15,6 +15,7 @@ type (
 		JWT() JWT
 		Log() Log
 		PG() PG
+		Redis() Redis
 		// GRPC() GRPC
 		Metrics() Metrics
 		Swagger() Swagger
@@ -22,11 +23,12 @@ type (
 
 	// Config -.
 	Config struct {
-		AppData  App
-		HTTPData HTTP
-		JWTData  JWT
-		LogData  Log
-		PGData   PG
+		AppData   App
+		HTTPData  HTTP
+		JWTData   JWT
+		LogData   Log
+		PGData    PG
+		RedisData Redis
 		// GRPCData    GRPC
 		MetricsData Metrics
 		SwaggerData Swagger
@@ -59,6 +61,11 @@ type (
 	PG struct {
 		PoolMax int    `env:"PG_POOL_MAX,required"`
 		URL     string `env:"PG_URL,required"`
+	}
+
+	Redis struct {
+		PoolMax int    `env:"REDIS_POOL_MAX"`
+		URL     string `env:"REDIS_URL,required"`
 	}
 
 	// // GRPC -.
@@ -97,6 +104,7 @@ func (c *Config) HTTP() HTTP       { return c.HTTPData }
 func (c *Config) JWT() JWT         { return c.JWTData }
 func (c *Config) Log() Log         { return c.LogData }
 func (c *Config) PG() PG           { return c.PGData }
+func (c *Config) Redis() Redis     { return c.RedisData }
 func (c *Config) Metrics() Metrics { return c.MetricsData }
 func (c *Config) Swagger() Swagger { return c.SwaggerData }
 

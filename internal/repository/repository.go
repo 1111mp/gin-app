@@ -1,6 +1,6 @@
 package repository
 
-import "github.com/1111mp/gin-app/pkg/postgres"
+import "github.com/1111mp/gin-app/pkg/state"
 
 // RepositoryGroup -.
 type RepositoryGroup struct {
@@ -10,16 +10,16 @@ type RepositoryGroup struct {
 }
 
 // NewRepositoryGroup -.
-func NewRepositoryGroup(pg *postgres.Postgres) *RepositoryGroup {
+func NewRepositoryGroup(appState *state.AppState) *RepositoryGroup {
 	return &RepositoryGroup{
 		&UserRepository{
-			pg,
+			appState,
 		},
 		&PostRepository{
-			pg,
+			appState,
 		},
 		&AccessTokenRepository{
-			pg,
+			appState,
 		},
 	}
 }

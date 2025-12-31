@@ -6,7 +6,7 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/ent/accesstoken"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/pkg/postgres"
+	"github.com/1111mp/gin-app/pkg/state"
 )
 
 // AccessTokenRepositoryInter -.
@@ -17,7 +17,7 @@ type AccessTokenRepositoryInter interface {
 
 // AccessTokenRepository -.
 type AccessTokenRepository struct {
-	pg *postgres.Postgres
+	appState *state.AppState
 }
 
 // CreateOne -.
@@ -26,7 +26,7 @@ func (a *AccessTokenRepository) CreateOne(
 	userId int,
 	dto dto.AccessTokenCreateOneDto,
 ) (*ent.AccessToken, error) {
-	return a.pg.Client.AccessToken.
+	return a.appState.PG.Client.AccessToken.
 		Create().
 		SetName(dto.Name).
 		SetOwner(dto.Owner).
@@ -40,7 +40,7 @@ func (a *AccessTokenRepository) GetByOwner(
 	ctx context.Context,
 	owner int,
 ) ([]*ent.AccessToken, error) {
-	return a.pg.Client.AccessToken.
+	return a.appState.PG.Client.AccessToken.
 		Query().
 		Where(
 			accesstoken.OwnerEQ(owner),

@@ -17,7 +17,7 @@ import (
 	"github.com/1111mp/gin-app/internal/service"
 	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/1111mp/gin-app/pkg/logger"
-	"github.com/1111mp/gin-app/pkg/postgres"
+	"github.com/1111mp/gin-app/pkg/state"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	ginzap "github.com/gin-contrib/zap"
@@ -44,7 +44,12 @@ import (
 // @securityDefinitions.apikey OpenAPIAuth
 // @in												header
 // @name											PRIVATE-TOKEN
-func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgres, l *logger.Logger) {
+func NewRouter(
+	app *gin.Engine,
+	cfg config.ConfigInterface,
+	appState *state.AppState,
+	logger *logger.Logger,
+) {
 	// apply middlewares
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
@@ -56,7 +61,7 @@ func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgre
 		},
 		MaxAge: 12 * time.Hour,
 	}))
-	app.Use(ginzap.GinzapWithConfig(l.Logger(), &ginzap.Config{
+	app.Use(ginzap.GinzapWithConfig(logger.Logger(), &ginzap.Config{
 		UTC:        true,
 		TimeFormat: time.RFC3339,
 		Context: func(ctx *gin.Context) []zapcore.Field {
@@ -83,9 +88,9 @@ func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgre
 			return fields
 		},
 	}))
-	app.Use(ginzap.RecoveryWithZap(l.Logger(), true))
+	app.Use(ginzap.RecoveryWithZap(logger.Logger(), true))
 	app.Use(timeout.Timeout(timeout.WithTimeout(3 * time.Second)))
-	app.Use(middleware.ErrorHandler(l))
+	app.Use(middleware.ErrorHandler(logger))
 
 	// Swagger
 	if cfg.Swagger().Enabled {
@@ -98,8 +103,8 @@ func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgre
 	})
 
 	j := jwt.NewJWTManager(jwt.Issuer(cfg.App().Name), jwt.Secret(cfg.JWT().SECRET))
-	rep := repository.NewRepositoryGroup(pg)
-	apiService, openApiService := service.NewServiceGroup(rep, j, l)
+	rep := repository.NewRepositoryGroup(appState)
+	apiService, openApiService := service.NewServiceGroup(rep, j, logger)
 
 	// Api Routes
 	{
@@ -125,7 +130,7 @@ func NewRouter(app *gin.Engine, cfg config.ConfigInterface, pg *postgres.Postgre
 		openApiRouter := openapi_router.NewRouterGroup(openApi)
 
 		// apply auth middleware
-		openApiGroup.Use(middleware.OpenAPIAuthHandler(pg))
+		openApiGroup.Use(middleware.OpenAPIAuthHandler(appState))
 
 		// register routes
 		openApiRouter.RegisterRoutes(openApiGroup)

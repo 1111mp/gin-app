@@ -29,6 +29,7 @@ type Postgres struct {
 	Client *ent.Client
 }
 
+// New -.
 func New(url string, opts ...Option) (*Postgres, error) {
 	pg := &Postgres{
 		maxPoolSize:  _defaultMaxPoolSize,

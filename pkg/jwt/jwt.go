@@ -6,6 +6,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+//go:generate mockgen -source=jwt.go -destination=../../internal/service/api/mocks_jwt_test.go -package=api_service_test
+
 const (
 	__defaultExpire = 24 * time.Hour
 	__deaultIssuer  = "gin-app"

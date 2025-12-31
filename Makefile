@@ -74,8 +74,8 @@ test: ### run test
 .PHONY: test
 
 mock: ### run mockgen
-	mockgen -source ./internal/repository/user_repository.go -package test > ./internal/test/user_repository_mocks.go
-	mockgen -source ./pkg/jwt/jwt.go -package test > ./internal/test/jwt_mocks.go
+	mockgen -source ./internal/repository/user_repository.go -package api_service_test > ./internal/service/api/mocks_user_repo_test.go
+	mockgen -source ./pkg/jwt/jwt.go -package api_service_test > ./internal/service/api/mocks_jwt_test.go
 .PHONY: mock
 
 schema-create: ### create ent schema

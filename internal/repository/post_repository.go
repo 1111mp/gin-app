@@ -6,7 +6,7 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/ent/post"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/pkg/postgres"
+	"github.com/1111mp/gin-app/pkg/state"
 )
 
 // PostRepositoryInter -.
@@ -17,7 +17,7 @@ type PostRepositoryInter interface {
 
 // PostRepository -.
 type PostRepository struct {
-	pg *postgres.Postgres
+	appState *state.AppState
 }
 
 // CreateOne -.
@@ -26,7 +26,7 @@ func (p *PostRepository) CreateOne(
 	userId int,
 	dto dto.PostCreateOneDto,
 ) (*ent.Post, error) {
-	return p.pg.Client.Post.
+	return p.appState.PG.Client.Post.
 		Create().
 		SetOwnerID(userId).
 		SetTitle(dto.Title).
@@ -40,7 +40,7 @@ func (p *PostRepository) GetById(
 	ctx context.Context,
 	id int,
 ) (*ent.Post, error) {
-	return p.pg.Client.Post.
+	return p.appState.PG.Client.Post.
 		Query().
 		Where(
 			post.IDEQ(id),

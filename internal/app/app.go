@@ -12,22 +12,36 @@ import (
 	"github.com/1111mp/gin-app/pkg/httpserver"
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/1111mp/gin-app/pkg/postgres"
+	"github.com/1111mp/gin-app/pkg/redis"
+	"github.com/1111mp/gin-app/pkg/state"
 )
 
 // Run creates objects via constructors.
 func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
-	l := logger.New(cfg.Log().Dir, cfg.Log().Level)
+	logger := logger.New(cfg.Log().Dir, cfg.Log().Level)
 
-	// Repository
+	// postgres
 	pg, err := postgres.New(cfg.PG().URL, postgres.MaxPoolSize(cfg.PG().PoolMax))
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+		logger.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
 	defer pg.Close()
 
+	// redis
+	rdb, err := redis.New(cfg.Redis().URL, redis.MaxPoolSize(cfg.Redis().PoolMax))
+	if err != nil {
+		logger.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
+	}
+	defer rdb.Close()
+
+	appState := &state.AppState{
+		PG:    pg,
+		Redis: rdb,
+	}
+
 	// HTTP Server
-	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP().Port))
-	router.NewRouter(httpServer.App, cfg, pg, l)
+	httpServer := httpserver.New(logger, httpserver.Port(cfg.HTTP().Port))
+	router.NewRouter(httpServer.App, cfg, appState, logger)
 
 	// Start server
 	httpServer.Start()
@@ -38,14 +52,14 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 
 	select {
 	case s := <-interrupt:
-		l.Infof("app - Run - signal: %s", s.String())
+		logger.Infof("app - Run - signal: %s", s.String())
 	case err := <-httpServer.Notify():
-		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		logger.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
 	}
 
 	// Shutdown
 	err = httpServer.Shutdown()
 	if err != nil {
-		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		logger.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
 	}
 }
