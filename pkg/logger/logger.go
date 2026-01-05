@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +25,8 @@ type Interface interface {
 	Warnf(template string, args ...interface{})
 	Errorf(template string, args ...interface{})
 	Fatalf(template string, args ...interface{})
+
+	Errorw(template string, args ...interface{})
 }
 
 // Logger -.
@@ -59,41 +62,47 @@ func New(dir string, level string) *Logger {
 	consoleCfg.EncodeTime = zapcore.RFC3339TimeEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
 
-	if dir != "" {
-		timberLogger := &timberjack.Logger{
-			Filename:           filepath.Join(dir, "gin-app.log"),
-			MaxSize:            200,
-			MaxBackups:         3,
-			MaxAge:             14,
-			Compression:        "gzip",
-			LocalTime:          true,
-			RotationInterval:   24 * time.Hour,
-			RotateAt:           []string{"00:00", "12:00"},
-			BackupTimeFormat:   "2006-01-02-15-04-05",
-			AppendTimeAfterExt: true,
-			// RotateAtMinutes:    []int{0, 15, 30, 45},
-		}
+	cores := []zapcore.Core{
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), l),
+	}
 
+	if dir != "" {
 		// file
 		fileCfg := zap.NewProductionEncoderConfig()
 		fileCfg.EncodeTime = zapcore.RFC3339TimeEncoder
 		fileEncoder := zapcore.NewJSONEncoder(fileCfg)
 
-		core = zapcore.NewTee(
-			zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), l),
-			zapcore.NewCore(fileEncoder, zapcore.AddSync(timberLogger), l),
-		)
-	} else {
-		core = zapcore.NewTee(
-			zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), l),
-		)
+		appLogWriter := getLogWriter(filepath.Join(dir, "app.log"))
+		appCore := zapcore.NewCore(fileEncoder, zapcore.AddSync(appLogWriter), l)
+		cores = append(cores, appCore)
+
+		errLogWriter := getLogWriter(filepath.Join(dir, "app-error.log"))
+		errCore := zapcore.NewCore(fileEncoder, zapcore.AddSync(errLogWriter), zap.ErrorLevel)
+		cores = append(cores, errCore)
 	}
 
+	core = zapcore.NewTee(cores...)
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	return &Logger{
 		logger: logger,
 		sugar:  logger.Sugar(),
+	}
+}
+
+func getLogWriter(filename string) io.Writer {
+	return &timberjack.Logger{
+		Filename:           filename,
+		MaxSize:            200, // MB
+		MaxBackups:         3,
+		MaxAge:             14, // Days
+		Compression:        "gzip",
+		LocalTime:          true,
+		RotationInterval:   24 * time.Hour,
+		RotateAt:           []string{"00:00", "12:00"},
+		BackupTimeFormat:   "2006-01-02-15-04-05",
+		AppendTimeAfterExt: true,
+		// RotateAtMinutes:    []int{0, 15, 30, 45},
 	}
 }
 
@@ -149,4 +158,9 @@ func (l *Logger) Errorf(template string, args ...interface{}) {
 // Fatalf -.
 func (l *Logger) Fatalf(template string, args ...interface{}) {
 	l.sugar.Fatalf(template, args...)
+}
+
+// Errorw -.
+func (l *Logger) Errorw(msg string, keysAndValues ...interface{}) {
+	l.sugar.Errorw(msg, keysAndValues...)
 }

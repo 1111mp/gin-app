@@ -6,11 +6,12 @@ import (
 
 	appErrors "github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/logger"
+	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 )
 
 // ErrorHandler captures errors and returns a consistent JSON error response.
-func ErrorHandler(l logger.Interface) gin.HandlerFunc {
+func ErrorHandler(logger logger.Interface) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.Next()
 
@@ -19,7 +20,15 @@ func ErrorHandler(l logger.Interface) gin.HandlerFunc {
 
 			var repErr *appErrors.RepositoryError
 			if errors.As(err, &repErr) {
-				l.Errorf("[repository error]: %v", repErr)
+				logger.Errorw(
+					"log from middleware error handler",
+					"error", repErr,
+					"request_id", requestid.Get(ctx),
+					"method", ctx.Request.Method,
+					"path", ctx.Request.URL.Path,
+					"route", ctx.FullPath(),
+					"handler", ctx.HandlerName(),
+				)
 
 				ctx.JSON(
 					http.StatusInternalServerError,

@@ -54,8 +54,13 @@ format: ### Run code formatter
 
 run: deps swag-v1 ### swag run for API v1
 	go mod download && \
-	CGO_ENABLED=0 go run -tags migrate ./cmd/app
+	CGO_ENABLED=0 go run ./cmd/app
 .PHONY: run
+
+run-with-migrate: deps swag-v1 ### swag run for API v1
+	go mod download && \
+	CGO_ENABLED=0 go run -tags migrate ./cmd/app
+.PHONY: run-with-migrate
 
 docker-rm-volume: ### remove docker volume
 	docker volume rm gin-app_pg-data

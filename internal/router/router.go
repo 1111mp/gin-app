@@ -32,7 +32,7 @@ import (
 
 // NewRouter -.
 // Swagger spec:
-// @title       Go Clean Template API
+// @title       Gin APP API
 // @description This is a sample server Petstore server.
 // @version 		1.0
 // @host 				localhost:8080

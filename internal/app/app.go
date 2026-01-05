@@ -27,12 +27,16 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 	}
 	defer pg.Close()
 
+	logger.Info("app - Run - postgres connected")
+
 	// redis
 	rdb, err := redis.New(cfg.Redis().URL, redis.MaxPoolSize(cfg.Redis().PoolMax))
 	if err != nil {
 		logger.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
 	}
 	defer rdb.Close()
+
+	logger.Info("app - Run - redis connected")
 
 	appState := &state.AppState{
 		PG:    pg,

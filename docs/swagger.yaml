@@ -149,7 +149,7 @@ host: localhost:8080
 info:
   contact: {}
   description: This is a sample server Petstore server.
-  title: Go Clean Template API
+  title: Gin APP API
   version: "1.0"
 paths:
   /api/v1/access-tokens:

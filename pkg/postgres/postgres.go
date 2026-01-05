@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/1111mp/gin-app/ent"
+	_ "github.com/1111mp/gin-app/ent/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 )
@@ -50,15 +51,32 @@ func New(url string, opts ...Option) (*Postgres, error) {
 	poolConfig.MaxConns = int32(pg.maxPoolSize)
 
 	for pg.connAttempts > 0 {
-		pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
+		pool, poolErr := pgxpool.NewWithConfig(context.Background(), poolConfig)
+		if poolErr != nil {
+			err = poolErr
+			log.Printf("Postgres is trying to connect, attempts left: %d, err: %v", pg.connAttempts, err)
+
+			time.Sleep(pg.connTimeout)
+			pg.connAttempts--
+
+			continue
+		}
+
+		// ✅ Ping to check connection
+		ctx, cancel := context.WithTimeout(context.Background(), pg.connTimeout)
+		err = pool.Ping(ctx)
+		cancel()
+
 		if err == nil {
+			pg.Pool = pool
 			break
 		}
 
-		log.Printf("Postgres is trying to connect, attempts left: %d", pg.connAttempts)
+		pool.Close()
+
+		log.Printf("Postgres is trying to connect, attempts left: %d, err: %v", pg.connAttempts, err)
 
 		time.Sleep(pg.connTimeout)
-
 		pg.connAttempts--
 	}
 
