@@ -67,7 +67,6 @@ func (u *UserApi) CreateOne(c *gin.Context) {
 // @Description Retrieve user information by given user ID
 // @ID          getUserById
 // @Tags        Users
-// @Accept      json
 // @Produce     json
 // @Param       id path int true "User ID"
 // @Success     200 {object} response.UserAPIResponse "Successfully retrieved user"

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// APIError - 接口层面返回的错误
+// APIError - format error for API response
 type APIError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`

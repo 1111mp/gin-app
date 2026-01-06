@@ -25,7 +25,15 @@ type AuthApi struct {
 }
 
 // LoginHandler godoc
-// @Summary OAuth2 Login
+// @Summary     Redirect to GitHub OAuth2 login page
+// @Description Redirects the user to GitHub's OAuth2 login page for authentication
+// @ID          AuthLogin
+// @Tags        Auth
+// @Param       redirect query string true  "URL to redirect after successful login"
+// @Param       lang     query string false "Preferred language"
+// @Success     302 "Redirects to GitHub OAuth2 login page"
+// @Failure     400 {object} errors.APIError "Bad request (invalid params)"
+// @Router      /api/v1/auth/login [get]
 func (a *AuthApi) LoginHandler(c *gin.Context) {
 	var dto dto.AuthLoginDto
 	if err := c.ShouldBindQuery(&dto); err != nil {
@@ -48,7 +56,7 @@ func (a *AuthApi) LoginHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, redirectURL)
 }
 
-// CallbackHandler godoc
+// CallbackHandler -.
 func (a *AuthApi) CallbackHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -85,7 +93,6 @@ func (a *AuthApi) CallbackHandler(c *gin.Context) {
 	// TODO store token and user info into DB
 	a.logger.Info("user info", zap.Any("user", user))
 
-	// response.WriteSuccess(c, user)
 	if state.Redirect != "" {
 		c.Redirect(http.StatusSeeOther, state.Redirect)
 	} else {

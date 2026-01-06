@@ -144,6 +144,42 @@ const docTemplate = `{
                 ]
             }
         },
+        "/api/v1/auth/login": {
+            "get": {
+                "description": "Redirects the user to GitHub's OAuth2 login page for authentication",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Redirect to GitHub OAuth2 login page",
+                "operationId": "AuthLogin",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "URL to redirect after successful login",
+                        "name": "redirect",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Preferred language",
+                        "name": "lang",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to GitHub OAuth2 login page"
+                    },
+                    "400": {
+                        "description": "Bad request (invalid params)",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/posts": {
             "post": {
                 "description": "Creates a new post resource",
@@ -302,9 +338,6 @@ const docTemplate = `{
         "/api/v1/users/{id}": {
             "get": {
                 "description": "Retrieve user information by given user ID",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
