@@ -12,6 +12,7 @@ require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/golang-migrate/migrate/v4 v4.19.0
+	github.com/google/go-github/v81 v81.0.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
@@ -25,6 +26,7 @@ require (
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.43.0
+	golang.org/x/oauth2 v0.34.0
 	golang.org/x/sync v0.17.0
 )
 
@@ -397,7 +399,6 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20250911091902-df9299821621 // indirect
 	golang.org/x/mod v0.29.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/telemetry v0.0.0-20251008203120-078029d740a8 // indirect
 	golang.org/x/term v0.36.0 // indirect

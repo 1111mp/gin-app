@@ -13,6 +13,7 @@ type ApiRouterGroupInter interface {
 
 // ApiRouterGroup -.
 type ApiRouterGroup struct {
+	AuthRouter        AuthRouterInter
 	UserRouter        UserRouterInter
 	PostRouter        PostRouterInter
 	AccessTokenRouter AccessTokenRouterInter
@@ -22,6 +23,9 @@ type ApiRouterGroup struct {
 func NewRouterGroup(a *api.ApiGroup) *ApiRouterGroup {
 
 	return &ApiRouterGroup{
+		&AuthRouter{
+			authApi: a.AuthApi,
+		},
 		&UserRouter{
 			userApi: a.UserApi,
 		},
@@ -36,6 +40,10 @@ func NewRouterGroup(a *api.ApiGroup) *ApiRouterGroup {
 
 // RegisterPublicRoutes -.
 func (r *ApiRouterGroup) RegisterPublicRoutes(group *gin.RouterGroup) {
+	// auth
+	{
+		r.AuthRouter.RegisterPublicRoutes(group)
+	}
 	// users
 	{
 		r.UserRouter.RegisterPublicRoutes(group)
@@ -52,6 +60,10 @@ func (r *ApiRouterGroup) RegisterPublicRoutes(group *gin.RouterGroup) {
 
 // RegisterPublicRoutes -.
 func (r *ApiRouterGroup) RegisterPrivateRoutes(group *gin.RouterGroup) {
+	// auth
+	{
+		r.AuthRouter.RegisterPrivateRoutes(group)
+	}
 	// users
 	{
 		r.UserRouter.RegisterPrivateRoutes(group)

@@ -111,7 +111,7 @@ func NewRouter(
 		publicApiV1 := app.Group("/api/v1")
 		privateApiV1 := publicApiV1.Group("/")
 
-		api := api_v1.NewApiGroup(apiService, cfg)
+		api := api_v1.NewApiGroup(apiService, cfg, logger)
 		apiRouter := api_router.NewRouterGroup(api)
 
 		// apply auth middleware

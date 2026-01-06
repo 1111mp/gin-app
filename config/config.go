@@ -19,6 +19,7 @@ type (
 		// GRPC() GRPC
 		Metrics() Metrics
 		Swagger() Swagger
+		Github() Github
 	}
 
 	// Config -.
@@ -32,6 +33,7 @@ type (
 		// GRPCData    GRPC
 		MetricsData Metrics
 		SwaggerData Swagger
+		GithubData  Github
 	}
 
 	// App -.
@@ -82,6 +84,12 @@ type (
 	Swagger struct {
 		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
 	}
+
+	Github struct {
+		ClientID     string `env:"GITHUB_CLIENT_ID,required"`
+		ClientSecret string `env:"GITHUB_CLIENT_SECRET,required"`
+		RedirectURL  string `env:"GITHUB_REDIRECT_URL,required"`
+	}
 )
 
 // NewConfig returns app config.
@@ -107,5 +115,6 @@ func (c *Config) PG() PG           { return c.PGData }
 func (c *Config) Redis() Redis     { return c.RedisData }
 func (c *Config) Metrics() Metrics { return c.MetricsData }
 func (c *Config) Swagger() Swagger { return c.SwaggerData }
+func (c *Config) Github() Github   { return c.GithubData }
 
 // func (c *Config) GRPC() GRPC    { return c.GRPCData }

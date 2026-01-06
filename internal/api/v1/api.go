@@ -3,18 +3,36 @@ package api_v1
 import (
 	"github.com/1111mp/gin-app/config"
 	api_service "github.com/1111mp/gin-app/internal/service/api"
+	"github.com/1111mp/gin-app/pkg/logger"
+	"github.com/1111mp/gin-app/pkg/oauth2/github"
 )
 
 // ApiGroup -.
 type ApiGroup struct {
+	AuthApi        AuthApiInter
 	UserApi        UserApiInter
 	PostApi        PostApiInter
 	AccessTokenApi AccessTokenApiInter
 }
 
 // NewApiGroup -.
-func NewApiGroup(s *api_service.ServiceGroup, cfg config.ConfigInterface) *ApiGroup {
+func NewApiGroup(
+	s *api_service.ServiceGroup,
+	cfg config.ConfigInterface,
+	logger logger.Interface,
+) *ApiGroup {
+	// setup github oauth2
+	githubOAuth2 := github.Setup(
+		github.ClientID(cfg.Github().ClientID),
+		github.ClientSecret(cfg.Github().ClientSecret),
+		github.RedirectURL(cfg.Github().RedirectURL),
+	)
+
 	return &ApiGroup{
+		&AuthApi{
+			logger,
+			githubOAuth2,
+		},
 		&UserApi{
 			cfg:         cfg,
 			userService: s.UserService,
