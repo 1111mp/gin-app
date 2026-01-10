@@ -20,6 +20,7 @@ type (
 		Metrics() Metrics
 		Swagger() Swagger
 		Github() Github
+		Google() Google
 	}
 
 	// Config -.
@@ -33,6 +34,7 @@ type (
 		// GRPCData    GRPC
 		MetricsData Metrics
 		SwaggerData Swagger
+		GoogleData  Google
 		GithubData  Github
 	}
 
@@ -85,6 +87,12 @@ type (
 		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
 	}
 
+	Google struct {
+		ClientID     string `env:"GOOGLE_CLIENT_ID,required"`
+		ClientSecret string `env:"GOOGLE_CLIENT_SECRET,required"`
+		RedirectURL  string `env:"GOOGLE_REDIRECT_URL,required"`
+	}
+
 	Github struct {
 		ClientID     string `env:"GITHUB_CLIENT_ID,required"`
 		ClientSecret string `env:"GITHUB_CLIENT_SECRET,required"`
@@ -115,6 +123,7 @@ func (c *Config) PG() PG           { return c.PGData }
 func (c *Config) Redis() Redis     { return c.RedisData }
 func (c *Config) Metrics() Metrics { return c.MetricsData }
 func (c *Config) Swagger() Swagger { return c.SwaggerData }
+func (c *Config) Google() Google   { return c.GoogleData }
 func (c *Config) Github() Github   { return c.GithubData }
 
 // func (c *Config) GRPC() GRPC    { return c.GRPCData }

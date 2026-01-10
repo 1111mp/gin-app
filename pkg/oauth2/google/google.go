@@ -1,18 +1,19 @@
-package github
+package google
 
 import (
 	"context"
 
-	go_github "github.com/google/go-github/v81/github"
 	"golang.org/x/oauth2"
-	oauth2gh "golang.org/x/oauth2/github"
+	"golang.org/x/oauth2/google"
+	googleOauth2 "google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
 )
 
 // ClientInter -.
 type ClientInter interface {
 	GetAuthURL(state string) string
 	GetToken(ctx context.Context, code string) (*oauth2.Token, error)
-	GetUser(ctx context.Context, token *oauth2.Token) (*go_github.User, error)
+	GetUser(ctx context.Context, token *oauth2.Token) (*googleOauth2.Userinfo, error)
 }
 
 // Client -.
@@ -37,8 +38,8 @@ func Setup(opts ...Option) *Client {
 		ClientID:     client.ClientID,
 		ClientSecret: client.ClientSecret,
 		RedirectURL:  client.RedirectURL,
-		Scopes:       []string{"read:user", "user:email"},
-		Endpoint:     oauth2gh.Endpoint,
+		Scopes:       []string{"openid", "profile", "email"},
+		Endpoint:     google.Endpoint,
 	}
 
 	return client
@@ -55,10 +56,14 @@ func (o *Client) GetToken(ctx context.Context, code string) (*oauth2.Token, erro
 }
 
 // GetUser -.
-func (o *Client) GetUser(ctx context.Context, token *oauth2.Token) (*go_github.User, error) {
-	client := go_github.NewClient(o.config.Client(ctx, token))
+func (o *Client) GetUser(ctx context.Context, token *oauth2.Token) (*googleOauth2.Userinfo, error) {
+	client := o.config.Client(ctx, token)
+	svc, err := googleOauth2.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
 
-	user, _, err := client.Users.Get(ctx, "")
+	user, err := svc.Userinfo.Get().Do()
 	if err != nil {
 		return nil, err
 	}

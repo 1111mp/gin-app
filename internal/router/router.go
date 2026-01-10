@@ -59,7 +59,7 @@ func NewRouter(
 		AllowOriginFunc: func(origin string) bool {
 			return origin == "http://localhost:8080"
 		},
-		MaxAge: 12 * time.Hour,
+		MaxAge: 1 * time.Hour,
 	}))
 	app.Use(ginzap.GinzapWithConfig(logger.Logger(), &ginzap.Config{
 		UTC:        true,

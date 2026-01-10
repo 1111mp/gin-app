@@ -21,7 +21,8 @@ func (u *AuthRouter) RegisterPublicRoutes(group *gin.RouterGroup) {
 	authGroup := group.Group("/auth")
 	{
 		authGroup.GET("/login", u.authApi.LoginHandler)
-		authGroup.GET("/callback", u.authApi.CallbackHandler)
+		authGroup.GET("/callback/google", u.authApi.GoogleCallbackHandler)
+		authGroup.GET("/callback/github", u.authApi.GithubCallbackHandler)
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/1111mp/gin-app/pkg/oauth2"
 	"github.com/1111mp/gin-app/pkg/oauth2/github"
+	"github.com/1111mp/gin-app/pkg/oauth2/google"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -15,13 +16,15 @@ import (
 // AuthApiInter -.
 type AuthApiInter interface {
 	LoginHandler(c *gin.Context)
-	CallbackHandler(c *gin.Context)
+	GoogleCallbackHandler(c *gin.Context)
+	GithubCallbackHandler(c *gin.Context)
 }
 
 // AuthApi -.
 type AuthApi struct {
 	logger       logger.Interface
-	githubOAuth2 github.OAuth2Inter
+	googleClient google.ClientInter
+	githubClient github.ClientInter
 }
 
 // LoginHandler godoc
@@ -51,13 +54,24 @@ func (a *AuthApi) LoginHandler(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	redirectURL := a.githubOAuth2.GetAuthURL(state)
+
+	var redirectURL string
+	switch dto.Client {
+	case "google":
+		redirectURL = a.googleClient.GetAuthURL(state)
+	case "github":
+		redirectURL = a.githubClient.GetAuthURL(state)
+	default:
+		// unsupported client
+		c.Error(errors.NewAPIError(http.StatusBadRequest, "Unsupported oauth2 client"))
+		return
+	}
 
 	c.Redirect(http.StatusFound, redirectURL)
 }
 
-// CallbackHandler -.
-func (a *AuthApi) CallbackHandler(c *gin.Context) {
+// GoogleCallbackHandler -.
+func (a *AuthApi) GoogleCallbackHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var dto dto.AuthCallbackDto
@@ -78,13 +92,57 @@ func (a *AuthApi) CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := a.githubOAuth2.GetToken(ctx, dto.Code)
+	token, err := a.googleClient.GetToken(ctx, dto.Code)
 	if err != nil {
 		c.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
 		return
 	}
 
-	user, err := a.githubOAuth2.GetUser(ctx, token)
+	user, err := a.googleClient.GetUser(ctx, token)
+	if err != nil {
+		c.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
+		return
+	}
+
+	// TODO store token and user info into DB
+	a.logger.Info("user info", zap.Any("user", user))
+
+	if state.Redirect != "" {
+		c.Redirect(http.StatusSeeOther, state.Redirect)
+	} else {
+		c.Redirect(http.StatusSeeOther, "/")
+	}
+}
+
+// GithubCallbackHandler -.
+func (a *AuthApi) GithubCallbackHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var dto dto.AuthCallbackDto
+	if err := c.ShouldBindQuery(&dto); err != nil {
+		c.Error(
+			errors.NewAPIError(
+				http.StatusBadRequest,
+				err.Error(),
+			),
+		)
+		return
+	}
+
+	// TODO check state to avoid CSRF attacks
+	state, err := oauth2.ParseState(dto.State)
+	if err != nil {
+		c.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
+		return
+	}
+
+	token, err := a.githubClient.GetToken(ctx, dto.Code)
+	if err != nil {
+		c.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
+		return
+	}
+
+	user, err := a.githubClient.GetUser(ctx, token)
 	if err != nil {
 		c.AbortWithError(http.StatusUnauthorized, errors.ErrUnauthorized)
 		return

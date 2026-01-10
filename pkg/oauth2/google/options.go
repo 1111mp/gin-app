@@ -1,4 +1,4 @@
-package github
+package google
 
 // Option -.
 type Option func(*Client)

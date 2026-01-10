@@ -103,6 +103,15 @@ migrate-down: ### migration down
 	migrate -path ent/migrate/migrations -database '$(PG_URL)?sslmode=disable' down 1
 .PHONY: migrate-down
 
+li-deps: ### list outdated dependencies
+	go list -m -u all
+.PHONY: li-deps
+
+upgrade-deps: ### upgrade dependencies to latest minor/patch versions
+	go get -u ./...
+	go mod tidy
+.PHONY: upgrade-deps
+
 bin-deps: ### install tools
 	go install tool
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate

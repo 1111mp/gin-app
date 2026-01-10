@@ -2,6 +2,7 @@ package dto
 
 // AuthLoginDto -.
 type AuthLoginDto struct {
+	Client      string `form:"client" binding:"required" oneof:"google github"`
 	Lang        string `form:"lang"`
 	RedirectURL string `form:"redirect" binding:"required"`
 }
