@@ -1,58 +1,83 @@
-version: "3.9"
+version: '3.9'
 
 x-db-environment: &x-db-environment
-  POSTGRES_SSL_MODE: "disable"
-  POSTGRES_HOST: "db"
-  POSTGRES_PORT: "5432"
-  POSTGRES_DB: "db"
-  POSTGRES_PASSWORD: "myAwEsOm3pa55@w0rd"
-  POSTGRES_USER: "user"
+  POSTGRES_SSL_MODE: 'disable'
+  POSTGRES_HOST: 'db'
+  POSTGRES_PORT: '5432'
+  POSTGRES_DB: 'yourdatabase'
+  POSTGRES_PASSWORD: 'yourpassword'
+  POSTGRES_USER: 'postgres'
+
+x-redis-environment: &x-redis-environment
+  REDIS_PASSWORD: 'yourpassword'
 
 x-rabbitmq-variables: &x-rabbitmq-variables
-  RABBITMQ_DEFAULT_USER: "guest"
-  RABBITMQ_DEFAULT_PASS: "guest"
+  RABBITMQ_DEFAULT_USER: 'guest'
+  RABBITMQ_DEFAULT_PASS: 'guest'
 
 x-backend-app-environment: &x-backend-app-environment
-  GOMAXPROCS: "1"
+  GOMAXPROCS: '1'
   # App
-  APP_NAME: "gin-app"
-  APP_VERSION: "1.0.0"
+  APP_NAME: 'gin-app'
+  APP_VERSION: '1.0.0'
   # HTTP settings
-  HTTP_PORT: "8080"
-  HTTP_USE_PREFORK_MODE: "false"
+  HTTP_PORT: '8080'
+  HTTP_USE_PREFORK_MODE: 'false'
   # Logger
-  LOG_LEVEL: "debug"
+  LOG_LEVEL: 'debug'
   # PG
-  PG_POOL_MAX: "2"
-  PG_URL: "postgres://user:myAwEsOm3pa55@w0rd@db:5432/db"
+  PG_POOL_MAX: '2'
+  PG_URL: 'postgres://user:myAwEsOm3pa55@w0rd@db:5432/db'
   # gRPC
-  GRPC_PORT: "8081"
+  GRPC_PORT: '8081'
   # RMQ
-  RMQ_RPC_SERVER: "rpc_server"
-  RMQ_RPC_CLIENT: "rpc_client"
-  RMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+  RMQ_RPC_SERVER: 'rpc_server'
+  RMQ_RPC_CLIENT: 'rpc_client'
+  RMQ_URL: 'amqp://guest:guest@rabbitmq:5672/'
   # NATS
-  NATS_RPC_SERVER: "rpc_server"
-  NATS_URL: "nats://guest:guest@nats:4222/"
+  NATS_RPC_SERVER: 'rpc_server'
+  NATS_URL: 'nats://guest:guest@nats:4222/'
   # Metrics
-  METRICS_ENABLED: "true"
+  METRICS_ENABLED: 'true'
   # Swagger
-  SWAGGER_ENABLED: "true"
+  SWAGGER_ENABLED: 'true'
 
 services:
   db:
     container_name: db
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       <<: *x-db-environment
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     ports:
-      - "5432:5432"
+      - '5432:5432'
     networks:
       app_network:
         aliases:
           - db.lvh.me
+
+  redis:
+    container_name: redis
+    image: redis:8.4-alpine
+    environment:
+      <<: *x-redis-environment
+    volumes:
+      - redis_data:/data
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--requirepass',
+        '${REDIS_PASSWORD}',
+      ]
+    ports:
+      - '6379:6379'
+    networks:
+      app_network:
+        aliases:
+          - redis.lvh.me
 
   rabbitmq:
     container_name: rabbitmq
@@ -60,8 +85,8 @@ services:
     environment:
       <<: *x-rabbitmq-variables
     ports:
-      - "15672:15672"
-      - "5672:5672"
+      - '15672:15672'
+      - '5672:5672'
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -72,10 +97,11 @@ services:
   nats:
     container_name: nats
     image: nats:2.12-alpine
-    command: [ "-m", "8222", "-sd", "/nats-data", "-user", "guest", "-pass", "guest" ]
+    command:
+      ['-m', '8222', '-sd', '/nats-data', '-user', 'guest', '-pass', 'guest']
     ports:
-      - "4222:4222"
-      - "8222:8222"
+      - '4222:4222'
+      - '8222:8222'
     volumes:
       - nats_data:/nats-data
     networks:
@@ -86,14 +112,14 @@ services:
   app:
     container_name: app
     platform: linux/amd64
-    pid: "host"
+    pid: 'host'
     build:
       context: .
     environment:
       <<: *x-backend-app-environment
     ports:
-      - "8080:8080"
-      - "8081:8081"
+      - '8080:8080'
+      - '8081:8081'
     depends_on:
       - db
       - rabbitmq
@@ -116,7 +142,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "80:80"
+      - '80:80'
     depends_on:
       - rabbitmq
       - app
@@ -131,5 +157,6 @@ networks:
 
 volumes:
   db_data:
+  redis_data:
   rabbitmq_data:
   nats_data:
