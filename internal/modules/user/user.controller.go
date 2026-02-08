@@ -1,26 +1,25 @@
-package api_v1
+package user
 
 import (
 	"net/http"
 
 	"github.com/1111mp/gin-app/config"
 	"github.com/1111mp/gin-app/internal/dto"
-	api_service "github.com/1111mp/gin-app/internal/service/api"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
-// UserApiInter -.
-type UserApiInter interface {
-	CreateOne(c *gin.Context)
-	GetById(c *gin.Context)
+type UserController struct {
+	cfg         config.ConfigInterface
+	userService UserService
 }
 
-// UserApi -.
-type UserApi struct {
-	cfg         config.ConfigInterface
-	userService api_service.UserServiceInter
+func NewUserController(
+	cfg config.ConfigInterface,
+	userService UserService,
+) *UserController {
+	return &UserController{cfg, userService}
 }
 
 // CreateOne godoc
@@ -35,7 +34,7 @@ type UserApi struct {
 // @Failure     400 {object} errors.APIError "Bad request (invalid params)"
 // @Failure     500 {object} errors.APIError "Internal server error"
 // @Router 			/api/v1/users [post]
-func (u *UserApi) CreateOne(c *gin.Context) {
+func (u *UserController) CreateOne(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var dto dto.UserCreateOneDto
@@ -74,7 +73,7 @@ func (u *UserApi) CreateOne(c *gin.Context) {
 // @Failure     404 {object} errors.APIError "User not found"
 // @Failure     500 {object} errors.APIError "Internal server error"
 // @Router      /api/v1/users/{id} [get]
-func (u *UserApi) GetById(c *gin.Context) {
+func (u *UserController) GetById(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var params dto.UserGetByIdDto

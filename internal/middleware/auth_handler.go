@@ -7,7 +7,7 @@ import (
 	"github.com/1111mp/gin-app/ent/accesstoken"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/jwt"
-	"github.com/1111mp/gin-app/pkg/state"
+	"github.com/1111mp/gin-app/pkg/postgres"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,7 +37,7 @@ func APIAuthHandler(j jwt.JWTManagerInterface, name string) gin.HandlerFunc {
 }
 
 // OpenAPIAuthHandler -.
-func OpenAPIAuthHandler(state *state.AppState) gin.HandlerFunc {
+func OpenAPIAuthHandler(pg *postgres.Postgres) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		accessToken := ctx.GetHeader("PRIVATE-TOKEN")
 		if accessToken == "" {
@@ -51,7 +51,7 @@ func OpenAPIAuthHandler(state *state.AppState) gin.HandlerFunc {
 			return
 		}
 
-		at, err := state.PG.Client.AccessToken.
+		at, err := pg.Client.AccessToken.
 			Query().
 			Where(accesstoken.ValueEQ(accessToken)).
 			Only(ctx.Request.Context())

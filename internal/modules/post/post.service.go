@@ -1,4 +1,4 @@
-package api_service
+package post
 
 import (
 	"context"
@@ -7,26 +7,27 @@ import (
 
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/internal/repository"
 	"github.com/1111mp/gin-app/pkg/errors"
-	"github.com/1111mp/gin-app/pkg/logger"
 )
 
-// PostServiceInter-.
-type PostServiceInter interface {
+type postServiceImpl struct {
+	postRepository PostRepository
+}
+
+type PostService interface {
 	CreateOne(ctx context.Context, userId int, dto dto.PostCreateOneDto) (*ent.PostEntity, error)
 	GetById(ctx context.Context, id int) (*ent.PostEntity, error)
 }
 
-// PostService -.
-type PostService struct {
-	l   logger.Interface
-	rep repository.PostRepositoryInter
+func NewPostService(
+	postRepository PostRepository,
+) PostService {
+	return &postServiceImpl{postRepository}
 }
 
 // CreateOne -.
-func (p *PostService) CreateOne(ctx context.Context, userId int, dto dto.PostCreateOneDto) (*ent.PostEntity, error) {
-	post, err := p.rep.CreateOne(ctx, userId, dto)
+func (ps *postServiceImpl) CreateOne(ctx context.Context, userId int, dto dto.PostCreateOneDto) (*ent.PostEntity, error) {
+	post, err := ps.postRepository.CreateOne(ctx, userId, dto)
 	if err != nil {
 		return nil, errors.WrapAPIError(
 			errors.ErrInternalServerError,
@@ -41,8 +42,8 @@ func (p *PostService) CreateOne(ctx context.Context, userId int, dto dto.PostCre
 }
 
 // GetById -.
-func (p *PostService) GetById(ctx context.Context, id int) (*ent.PostEntity, error) {
-	post, err := p.rep.GetById(ctx, id)
+func (ps *postServiceImpl) GetById(ctx context.Context, id int) (*ent.PostEntity, error) {
+	post, err := ps.postRepository.GetById(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, errors.WrapAPIError(

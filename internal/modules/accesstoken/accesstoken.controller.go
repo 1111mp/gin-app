@@ -1,25 +1,20 @@
-package api_v1
+package accesstoken
 
 import (
 	"net/http"
 
 	"github.com/1111mp/gin-app/internal/dto"
-	api_service "github.com/1111mp/gin-app/internal/service/api"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
-// AccessTokenApiInter -.
-type AccessTokenApiInter interface {
-	CreateOne(c *gin.Context, userId int)
-	GetSelfTokens(c *gin.Context, userId int)
-	GetTokensByOwner(c *gin.Context)
+type AccessTokenController struct {
+	accessTokenService AccessTokenService
 }
 
-// AccessTokenApi -.
-type AccessTokenApi struct {
-	accessTokenService api_service.AccessTokenServiceInter
+func NewAccessTokenController(accessTokenService AccessTokenService) *AccessTokenController {
+	return &AccessTokenController{accessTokenService}
 }
 
 // CreateOne godoc
@@ -35,7 +30,7 @@ type AccessTokenApi struct {
 // @Failure     400 {object} errors.APIError "Bad request (invalid params)"
 // @Failure     500 {object} errors.APIError "Internal server error"
 // @Router 			/api/v1/access-tokens [post]
-func (a *AccessTokenApi) CreateOne(c *gin.Context, userId int) {
+func (a *AccessTokenController) CreateOne(c *gin.Context, userId int) {
 	ctx := c.Request.Context()
 
 	var dto dto.AccessTokenCreateOneDto
@@ -68,7 +63,7 @@ func (a *AccessTokenApi) CreateOne(c *gin.Context, userId int) {
 // @Success 		200 {object} response.AccessTokenListAPIResponse "List of access tokens"
 // @Failure     500 {object} errors.APIError "Internal server error"
 // @Router 			/api/v1/access-tokens [get]
-func (a *AccessTokenApi) GetSelfTokens(c *gin.Context, userId int) {
+func (a *AccessTokenController) GetSelfTokens(c *gin.Context, userId int) {
 	ctx := c.Request.Context()
 
 	accessTokens, err := a.accessTokenService.GetByOwner(ctx, userId)
@@ -92,7 +87,7 @@ func (a *AccessTokenApi) GetSelfTokens(c *gin.Context, userId int) {
 // @Failure     400 {object} errors.APIError "Bad request (invalid ID)"
 // @Failure     500 {object} errors.APIError "Internal server error"
 // @Router 			/api/v1/access-tokens/{owner} [get]
-func (a *AccessTokenApi) GetTokensByOwner(c *gin.Context) {
+func (a *AccessTokenController) GetTokensByOwner(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var dto dto.AccessTokenGetByOwnerDto

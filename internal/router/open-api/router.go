@@ -1,25 +1,33 @@
 package openapi_router
 
 import (
-	openapi_v1 "github.com/1111mp/gin-app/internal/open-api/v1"
+	"github.com/1111mp/gin-app/internal/middleware"
+	"github.com/1111mp/gin-app/pkg/postgres"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/fx"
 )
 
-// ApiRouterGroupInter -.
-type ApiRouterGroupInter interface {
-	RegisterRoutes(group *gin.RouterGroup)
+type OpenAPIRouter struct {
+	fx.Out
+
+	Private *gin.RouterGroup `name:"open-api:private"`
 }
 
-// ApiRouterGroup -.
-type ApiRouterGroup struct {
+type OpenAPIRouterParams struct {
+	fx.In
+
+	Private *gin.RouterGroup `name:"open-api:private"`
 }
 
-// NewRouterGroup -.
-func NewRouterGroup(a *openapi_v1.ApiGroup) *ApiRouterGroup {
-	return &ApiRouterGroup{}
-}
+func NewOpenAPIRouter(
+	app *gin.Engine,
+	pg *postgres.Postgres,
+) OpenAPIRouter {
+	private := app.Group("/open-api/v1")
 
-// RegisterRoutes -.
-func (o *ApiRouterGroup) RegisterRoutes(group *gin.RouterGroup) {
+	private.Use(middleware.OpenAPIAuthHandler(pg))
 
+	return OpenAPIRouter{
+		Private: private,
+	}
 }

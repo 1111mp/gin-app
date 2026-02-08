@@ -3,21 +3,12 @@ package router
 import (
 	"bytes"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/1111mp/gin-app/config"
 	_ "github.com/1111mp/gin-app/docs"
-	api_v1 "github.com/1111mp/gin-app/internal/api/v1"
 	"github.com/1111mp/gin-app/internal/middleware"
-	openapi_v1 "github.com/1111mp/gin-app/internal/open-api/v1"
-	"github.com/1111mp/gin-app/internal/repository"
-	api_router "github.com/1111mp/gin-app/internal/router/api"
-	openapi_router "github.com/1111mp/gin-app/internal/router/open-api"
-	"github.com/1111mp/gin-app/internal/service"
-	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/1111mp/gin-app/pkg/logger"
-	"github.com/1111mp/gin-app/pkg/state"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	ginzap "github.com/gin-contrib/zap"
@@ -45,11 +36,11 @@ import (
 // @in												header
 // @name											PRIVATE-TOKEN
 func NewRouter(
-	app *gin.Engine,
 	cfg config.ConfigInterface,
-	appState *state.AppState,
-	logger *logger.Logger,
-) {
+	logger logger.Interface,
+) *gin.Engine {
+	app := gin.Default()
+
 	// apply middlewares
 	app.Use(requestid.New())
 	app.Use(cors.New(cors.Config{
@@ -61,6 +52,7 @@ func NewRouter(
 		},
 		MaxAge: 1 * time.Hour,
 	}))
+
 	app.Use(ginzap.GinzapWithConfig(logger.Logger(), &ginzap.Config{
 		UTC:        true,
 		TimeFormat: time.RFC3339,
@@ -89,7 +81,7 @@ func NewRouter(
 		},
 	}))
 	app.Use(ginzap.RecoveryWithZap(logger.Logger(), true))
-	app.Use(timeout.Timeout(timeout.WithTimeout(3 * time.Second)))
+	app.Use(timeout.Timeout(timeout.WithTimeout(6 * time.Second)))
 	app.Use(middleware.ErrorHandler(logger))
 
 	// Swagger
@@ -97,42 +89,5 @@ func NewRouter(
 		app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
 
-	// K8s probe
-	app.GET("/healthz", func(c *gin.Context) {
-		c.Status(http.StatusOK)
-	})
-
-	j := jwt.NewJWTManager(jwt.Issuer(cfg.App().Name), jwt.Secret(cfg.JWT().SECRET))
-	rep := repository.NewRepositoryGroup(appState)
-	apiService, openApiService := service.NewServiceGroup(rep, j, logger)
-
-	// Api Routes
-	{
-		publicApiV1 := app.Group("/api/v1")
-		privateApiV1 := publicApiV1.Group("/")
-
-		api := api_v1.NewApiGroup(apiService, cfg, logger)
-		apiRouter := api_router.NewRouterGroup(api)
-
-		// apply auth middleware
-		privateApiV1.Use(middleware.APIAuthHandler(j, cfg.HTTP().CookieName))
-
-		// register routes
-		apiRouter.RegisterPublicRoutes(publicApiV1)
-		apiRouter.RegisterPrivateRoutes(privateApiV1)
-	}
-
-	// OpenApi Routes
-	{
-		openApiGroup := app.Group("/open-api/v1")
-
-		openApi := openapi_v1.NewApiGroup(openApiService)
-		openApiRouter := openapi_router.NewRouterGroup(openApi)
-
-		// apply auth middleware
-		openApiGroup.Use(middleware.OpenAPIAuthHandler(appState))
-
-		// register routes
-		openApiRouter.RegisterRoutes(openApiGroup)
-	}
+	return app
 }

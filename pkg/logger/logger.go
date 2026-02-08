@@ -14,6 +14,8 @@ import (
 
 // Interface -.
 type Interface interface {
+	Logger() *zap.Logger
+
 	Debug(args ...interface{})
 	Info(args ...interface{})
 	Warn(args ...interface{})

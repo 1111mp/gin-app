@@ -1,4 +1,4 @@
-package repository
+package post
 
 import (
 	"context"
@@ -6,27 +6,29 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/ent/post"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/pkg/state"
+	"github.com/1111mp/gin-app/pkg/postgres"
 )
 
-// PostRepositoryInter -.
-type PostRepositoryInter interface {
+type postRepositoryImpl struct {
+	pg *postgres.Postgres
+}
+
+type PostRepository interface {
 	CreateOne(ctx context.Context, userId int, dto dto.PostCreateOneDto) (*ent.Post, error)
 	GetById(ctx context.Context, id int) (*ent.Post, error)
 }
 
-// PostRepository -.
-type PostRepository struct {
-	appState *state.AppState
+func NewPostRepository(pg *postgres.Postgres) PostRepository {
+	return &postRepositoryImpl{pg}
 }
 
 // CreateOne -.
-func (p *PostRepository) CreateOne(
+func (p *postRepositoryImpl) CreateOne(
 	ctx context.Context,
 	userId int,
 	dto dto.PostCreateOneDto,
 ) (*ent.Post, error) {
-	return p.appState.PG.Client.Post.
+	return p.pg.Client.Post.
 		Create().
 		SetOwnerID(userId).
 		SetTitle(dto.Title).
@@ -36,11 +38,11 @@ func (p *PostRepository) CreateOne(
 }
 
 // GetById -.
-func (p *PostRepository) GetById(
+func (p *postRepositoryImpl) GetById(
 	ctx context.Context,
 	id int,
 ) (*ent.Post, error) {
-	return p.appState.PG.Client.Post.
+	return p.pg.Client.Post.
 		Query().
 		Where(
 			post.IDEQ(id),

@@ -1,4 +1,4 @@
-package api_service
+package user
 
 import (
 	"context"
@@ -7,40 +7,30 @@ import (
 
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/internal/repository"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/jwt"
-	"github.com/1111mp/gin-app/pkg/logger"
 )
 
-// UserServiceInter -.
-type UserServiceInter interface {
+type userServiceImpl struct {
+	jwt            jwt.JWTManagerInterface
+	userRepository UserRepository
+}
+
+type UserService interface {
 	CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.UserEntity, string, error)
 	GetById(ctx context.Context, id int) (*ent.UserEntity, error)
 }
 
-// UserService -.
-type UserService struct {
-	l   logger.Interface
-	rep repository.UserRepositoryInter
-	jwt jwt.JWTManagerInterface
-}
-
-// NewUserService -.
-func NewUserService(l logger.Interface,
-	rep repository.UserRepositoryInter,
+func NewUserService(
 	jwt jwt.JWTManagerInterface,
-) *UserService {
-	return &UserService{
-		l:   l,
-		rep: rep,
-		jwt: jwt,
-	}
+	userRepository UserRepository,
+) UserService {
+	return &userServiceImpl{jwt, userRepository}
 }
 
 // CreateUser -.
-func (u *UserService) CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.UserEntity, string, error) {
-	user, err := u.rep.CreateOne(ctx, dto)
+func (us *userServiceImpl) CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.UserEntity, string, error) {
+	user, err := us.userRepository.CreateOne(ctx, dto)
 	if err != nil {
 		return nil, "", errors.WrapAPIError(
 			errors.ErrInternalServerError,
@@ -51,7 +41,7 @@ func (u *UserService) CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (
 		)
 	}
 
-	token, err := u.jwt.GenerateToken(user.ID)
+	token, err := us.jwt.GenerateToken(user.ID)
 	if err != nil {
 		return nil, "", errors.WrapAPIError(
 			errors.ErrInternalServerError,
@@ -66,8 +56,8 @@ func (u *UserService) CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (
 }
 
 // GetById -.
-func (u *UserService) GetById(ctx context.Context, id int) (*ent.UserEntity, error) {
-	user, err := u.rep.GetById(ctx, id)
+func (us *userServiceImpl) GetById(ctx context.Context, id int) (*ent.UserEntity, error) {
+	user, err := us.userRepository.GetById(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, errors.WrapAPIError(

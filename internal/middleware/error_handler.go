@@ -22,7 +22,7 @@ func ErrorHandler(logger logger.Interface) gin.HandlerFunc {
 			if errors.As(err, &repErr) {
 				logger.Errorw(
 					"log from middleware error handler",
-					"error", repErr,
+					"error", repErr.Message,
 					"request_id", requestid.Get(ctx),
 					"method", ctx.Request.Method,
 					"path", ctx.Request.URL.Path,

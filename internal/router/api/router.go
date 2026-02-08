@@ -1,79 +1,39 @@
 package api_router
 
 import (
-	api "github.com/1111mp/gin-app/internal/api/v1"
+	"github.com/1111mp/gin-app/config"
+	"github.com/1111mp/gin-app/internal/middleware"
+	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/fx"
 )
 
-// ApiRouterGroupInter -.
-type ApiRouterGroupInter interface {
-	RegisterPublicRoutes(group *gin.RouterGroup)
-	RegisterPrivateRoutes(group *gin.RouterGroup)
+type APIRouter struct {
+	fx.Out
+
+	Public  *gin.RouterGroup `name:"api:public"`
+	Private *gin.RouterGroup `name:"api:private"`
 }
 
-// ApiRouterGroup -.
-type ApiRouterGroup struct {
-	AuthRouter        AuthRouterInter
-	UserRouter        UserRouterInter
-	PostRouter        PostRouterInter
-	AccessTokenRouter AccessTokenRouterInter
+type APIRouterParams struct {
+	fx.In
+
+	Public  *gin.RouterGroup `name:"api:public"`
+	Private *gin.RouterGroup `name:"api:private"`
 }
 
-// NewRouterGroup -.
-func NewRouterGroup(a *api.ApiGroup) *ApiRouterGroup {
+func NewAPIRouter(
+	cfg config.ConfigInterface,
+	jwt jwt.JWTManagerInterface,
+	app *gin.Engine,
+) APIRouter {
+	public := app.Group("/api/v1")
+	private := public.Group("/")
 
-	return &ApiRouterGroup{
-		&AuthRouter{
-			authApi: a.AuthApi,
-		},
-		&UserRouter{
-			userApi: a.UserApi,
-		},
-		&PostRouter{
-			postApi: a.PostApi,
-		},
-		&AccessTokenRouter{
-			accessTokenApi: a.AccessTokenApi,
-		},
-	}
-}
+	private.Use(middleware.APIAuthHandler(jwt, cfg.HTTP().CookieName))
 
-// RegisterPublicRoutes -.
-func (r *ApiRouterGroup) RegisterPublicRoutes(group *gin.RouterGroup) {
-	// auth
-	{
-		r.AuthRouter.RegisterPublicRoutes(group)
-	}
-	// users
-	{
-		r.UserRouter.RegisterPublicRoutes(group)
-	}
-	// posts
-	{
-		r.PostRouter.RegisterPublicRoutes(group)
-	}
-	// access-tokens
-	{
-		r.AccessTokenRouter.RegisterPublicRoutes(group)
-	}
-}
-
-// RegisterPublicRoutes -.
-func (r *ApiRouterGroup) RegisterPrivateRoutes(group *gin.RouterGroup) {
-	// auth
-	{
-		r.AuthRouter.RegisterPrivateRoutes(group)
-	}
-	// users
-	{
-		r.UserRouter.RegisterPrivateRoutes(group)
-	}
-	// posts
-	{
-		r.PostRouter.RegisterPrivateRoutes(group)
-	}
-	// access-tokens
-	{
-		r.AccessTokenRouter.RegisterPrivateRoutes(group)
+	return APIRouter{
+		Public:  public,
+		Private: private,
 	}
 }

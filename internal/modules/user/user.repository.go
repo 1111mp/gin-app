@@ -1,4 +1,4 @@
-package repository
+package user
 
 import (
 	"context"
@@ -6,28 +6,31 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/ent/user"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/pkg/state"
+	"github.com/1111mp/gin-app/pkg/postgres"
 )
 
-//go:generate mockgen -source=user_repository.go -destination=../service/api/mocks_user_repo_test.go -package=api_service_test
+//go:generate mockgen -source=user_repository.go -destination=./mocks_user_repo_test.go -package=user_test
+
+type userRepositoryImpl struct {
+	pg *postgres.Postgres
+}
 
 // UserRepositoryInter -.
-type UserRepositoryInter interface {
+type UserRepository interface {
 	CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.User, error)
 	GetById(ctx context.Context, id int) (*ent.User, error)
 }
 
-// UserRepository -.
-type UserRepository struct {
-	appState *state.AppState
+func NewUserRepository(pg *postgres.Postgres) UserRepository {
+	return &userRepositoryImpl{pg}
 }
 
 // CreateOne -.
-func (u *UserRepository) CreateOne(
+func (u *userRepositoryImpl) CreateOne(
 	ctx context.Context,
 	dto dto.UserCreateOneDto,
 ) (*ent.User, error) {
-	return u.appState.PG.Client.User.
+	return u.pg.Client.User.
 		Create().
 		SetName(dto.Name).
 		SetEmail(dto.Email).
@@ -36,11 +39,11 @@ func (u *UserRepository) CreateOne(
 }
 
 // GetById -.
-func (u *UserRepository) GetById(
+func (u *userRepositoryImpl) GetById(
 	ctx context.Context,
 	id int,
 ) (*ent.User, error) {
-	return u.appState.PG.Client.User.
+	return u.pg.Client.User.
 		Query().
 		WithPosts().
 		Where(

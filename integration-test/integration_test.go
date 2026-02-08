@@ -17,12 +17,13 @@ const (
 	attempts = 20
 
 	// Attempts connection
-	httpURL        = "http://" + host + ":8080"
-	healthPath     = httpURL + "/healthz"
+	httpURL = "http://" + host + ":8080"
+
 	requestTimeout = 5 * time.Second
 
 	// HTTP REST
 	basePathV1 = httpURL + "/api/v1"
+	healthPath = basePathV1 + "/healthz"
 
 	// gRPC
 	grpcURL = host + ":8081"

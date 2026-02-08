@@ -1,30 +1,29 @@
-package api_service
+package accesstoken
 
 import (
 	"context"
 
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/internal/repository"
 	"github.com/1111mp/gin-app/pkg/errors"
-	"github.com/1111mp/gin-app/pkg/logger"
 )
 
-// AccessTokenServiceInter -.
-type AccessTokenServiceInter interface {
+type accessTokenServiceImpl struct {
+	accessTokenRepository AccessTokenRepository
+}
+
+type AccessTokenService interface {
 	CreateOne(ctx context.Context, userId int, dto dto.AccessTokenCreateOneDto) (*ent.AccessTokenEntity, error)
 	GetByOwner(ctx context.Context, owner int) ([]*ent.AccessTokenEntity, error)
 }
 
-// AccessTokenService -.
-type AccessTokenService struct {
-	l   logger.Interface
-	rep repository.AccessTokenRepositoryInter
+func NewAccessTokenService(accessTokenRepository AccessTokenRepository) AccessTokenService {
+	return &accessTokenServiceImpl{accessTokenRepository}
 }
 
 // CreateOne -.
-func (a *AccessTokenService) CreateOne(ctx context.Context, userId int, dto dto.AccessTokenCreateOneDto) (*ent.AccessTokenEntity, error) {
-	accessToken, err := a.rep.CreateOne(ctx, userId, dto)
+func (a *accessTokenServiceImpl) CreateOne(ctx context.Context, userId int, dto dto.AccessTokenCreateOneDto) (*ent.AccessTokenEntity, error) {
+	accessToken, err := a.accessTokenRepository.CreateOne(ctx, userId, dto)
 	if err != nil {
 		return nil, errors.WrapAPIError(
 			errors.ErrInternalServerError,
@@ -39,8 +38,8 @@ func (a *AccessTokenService) CreateOne(ctx context.Context, userId int, dto dto.
 }
 
 // GetByOwner -.
-func (a *AccessTokenService) GetByOwner(ctx context.Context, owner int) ([]*ent.AccessTokenEntity, error) {
-	accessTokens, err := a.rep.GetByOwner(ctx, owner)
+func (a *accessTokenServiceImpl) GetByOwner(ctx context.Context, owner int) ([]*ent.AccessTokenEntity, error) {
+	accessTokens, err := a.accessTokenRepository.GetByOwner(ctx, owner)
 	if err != nil {
 		return nil, errors.WrapAPIError(
 			errors.ErrInternalServerError,

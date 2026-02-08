@@ -1,24 +1,22 @@
-package api_v1
+package post
 
 import (
 	"net/http"
 
 	"github.com/1111mp/gin-app/internal/dto"
-	api_service "github.com/1111mp/gin-app/internal/service/api"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/1111mp/gin-app/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
-// PostApiInter -.
-type PostApiInter interface {
-	CreateOne(c *gin.Context, userId int)
-	GetById(c *gin.Context)
+type PostController struct {
+	postService PostService
 }
 
-// PostApi -.
-type PostApi struct {
-	postService api_service.PostServiceInter
+func NewPostController(
+	postService PostService,
+) *PostController {
+	return &PostController{postService}
 }
 
 // CreateOne godoc
@@ -34,7 +32,7 @@ type PostApi struct {
 // @Failure     400 {object} errors.APIError "Bad request (invalid params)"
 // @Failure     500 {object} errors.APIError "Internal server error"
 // @Router 			/api/v1/posts [post]
-func (p *PostApi) CreateOne(c *gin.Context, userId int) {
+func (p *PostController) CreateOne(c *gin.Context, userId int) {
 	ctx := c.Request.Context()
 
 	var dto dto.PostCreateOneDto
@@ -71,7 +69,7 @@ func (p *PostApi) CreateOne(c *gin.Context, userId int) {
 // @Failure     404 {object} errors.APIError "Post not found"
 // @Failure     500 {object} errors.APIError "Internal server error"
 // @Router      /api/v1/posts/{id} [get]
-func (p *PostApi) GetById(c *gin.Context) {
+func (p *PostController) GetById(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var params dto.PostGetByIdDto

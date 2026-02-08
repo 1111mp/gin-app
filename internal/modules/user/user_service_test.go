@@ -1,4 +1,4 @@
-package api_service_test
+package user_test
 
 import (
 	"context"
@@ -6,8 +6,7 @@ import (
 
 	ent "github.com/1111mp/gin-app/ent"
 	dto "github.com/1111mp/gin-app/internal/dto"
-	api_service "github.com/1111mp/gin-app/internal/service/api"
-	"github.com/1111mp/gin-app/pkg/logger"
+	"github.com/1111mp/gin-app/internal/modules/user"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -26,10 +25,9 @@ func TestCreateUser(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	repo := NewMockUserRepositoryInter(ctrl)
+	repository := NewMockUserRepository(ctrl)
 	jwt := NewMockJWTManagerInterface(ctrl)
-	l := logger.New("", "debug")
-	userService := api_service.NewUserService(l, repo, jwt)
+	userService := user.NewUserService(jwt, repository)
 
 	ctx := context.Background()
 	inputDto := dto.UserCreateOneDto{
@@ -47,7 +45,7 @@ func TestCreateUser(t *testing.T) {
 		{
 			name: "create one empty result",
 			mock: func() {
-				repo.EXPECT().CreateOne(ctx, inputDto).Return(mockUser, nil)
+				repository.EXPECT().CreateOne(ctx, inputDto).Return(mockUser, nil)
 				jwt.EXPECT().GenerateToken(mockUser.ID).Return("mock-token", nil)
 			},
 			res:   mockUser,

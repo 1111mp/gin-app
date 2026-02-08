@@ -1,4 +1,4 @@
-package repository
+package accesstoken
 
 import (
 	"context"
@@ -6,27 +6,29 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/ent/accesstoken"
 	"github.com/1111mp/gin-app/internal/dto"
-	"github.com/1111mp/gin-app/pkg/state"
+	"github.com/1111mp/gin-app/pkg/postgres"
 )
 
-// AccessTokenRepositoryInter -.
-type AccessTokenRepositoryInter interface {
+type accessTokenRepositoryimpl struct {
+	pg *postgres.Postgres
+}
+
+type AccessTokenRepository interface {
 	CreateOne(ctx context.Context, userId int, dto dto.AccessTokenCreateOneDto) (*ent.AccessToken, error)
 	GetByOwner(ctx context.Context, owner int) ([]*ent.AccessToken, error)
 }
 
-// AccessTokenRepository -.
-type AccessTokenRepository struct {
-	appState *state.AppState
+func NewAccessTokenRepository(pg *postgres.Postgres) AccessTokenRepository {
+	return &accessTokenRepositoryimpl{pg}
 }
 
 // CreateOne -.
-func (a *AccessTokenRepository) CreateOne(
+func (a *accessTokenRepositoryimpl) CreateOne(
 	ctx context.Context,
 	userId int,
 	dto dto.AccessTokenCreateOneDto,
 ) (*ent.AccessToken, error) {
-	return a.appState.PG.Client.AccessToken.
+	return a.pg.Client.AccessToken.
 		Create().
 		SetName(dto.Name).
 		SetOwner(dto.Owner).
@@ -36,11 +38,11 @@ func (a *AccessTokenRepository) CreateOne(
 }
 
 // GetByOwner -.
-func (a *AccessTokenRepository) GetByOwner(
+func (a *accessTokenRepositoryimpl) GetByOwner(
 	ctx context.Context,
 	owner int,
 ) ([]*ent.AccessToken, error) {
-	return a.appState.PG.Client.AccessToken.
+	return a.pg.Client.AccessToken.
 		Query().
 		Where(
 			accesstoken.OwnerEQ(owner),

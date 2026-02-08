@@ -79,8 +79,8 @@ test: ### run test
 .PHONY: test
 
 mock: ### run mockgen
-	mockgen -source ./internal/repository/user_repository.go -package api_service_test > ./internal/service/api/mocks_user_repo_test.go
-	mockgen -source ./pkg/jwt/jwt.go -package api_service_test > ./internal/service/api/mocks_jwt_test.go
+	mockgen -source ./internal/modules/user/user.repository.go -package user_test > ./internal/modules/user/mocks_user_repo_test.go
+	mockgen -source ./pkg/jwt/jwt.go -package user_test > ./internal/modules/user/mocks_jwt_test.go
 .PHONY: mock
 
 schema-create: ### create ent schema
@@ -103,9 +103,9 @@ migrate-down: ### migration down
 	migrate -path ent/migrate/migrations -database '$(PG_URL)?sslmode=disable' down 1
 .PHONY: migrate-down
 
-li-deps: ### list outdated dependencies
+ls-deps: ### list outdated dependencies
 	go list -m -u all
-.PHONY: li-deps
+.PHONY: ls-deps
 
 upgrade-deps: ### upgrade dependencies to latest minor/patch versions
 	go get -u ./...
