@@ -16,7 +16,14 @@ const (
 )
 
 // Server -.
-type Server struct {
+type Server interface {
+	Start() error
+	Shutdown() error
+	GetAddress() string
+}
+
+// serverImpl -.
+type serverImpl struct {
 	srv *http.Server
 
 	Address         string
@@ -26,9 +33,9 @@ type Server struct {
 }
 
 // New -.
-func New(handler *gin.Engine, opts ...Option) *Server {
+func New(handler *gin.Engine, opts ...Option) Server {
 
-	s := &Server{
+	s := &serverImpl{
 		srv:             nil,
 		Address:         _defaultAddr,
 		readTimeout:     _defaultReadTimeout,
@@ -53,14 +60,19 @@ func New(handler *gin.Engine, opts ...Option) *Server {
 }
 
 // Start -.
-func (s *Server) Start() error {
+func (s *serverImpl) Start() error {
 	return s.srv.ListenAndServe()
 }
 
 // Shutdown -.
-func (s *Server) Shutdown() error {
+func (s *serverImpl) Shutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 	defer cancel()
 
 	return s.srv.Shutdown(ctx)
+}
+
+// GetAddress -.
+func (s *serverImpl) GetAddress() string {
+	return s.Address
 }

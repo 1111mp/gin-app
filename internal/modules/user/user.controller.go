@@ -11,12 +11,12 @@ import (
 )
 
 type UserController struct {
-	cfg         config.ConfigInterface
+	cfg         config.Config
 	userService UserService
 }
 
 func NewUserController(
-	cfg config.ConfigInterface,
+	cfg config.Config,
 	userService UserService,
 ) *UserController {
 	return &UserController{cfg, userService}

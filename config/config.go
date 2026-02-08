@@ -8,8 +8,8 @@ import (
 )
 
 type (
-	// ConfigInterface -.
-	ConfigInterface interface {
+	// Config -.
+	Config interface {
 		App() App
 		HTTP() HTTP
 		JWT() JWT
@@ -23,8 +23,8 @@ type (
 		Google() Google
 	}
 
-	// Config -.
-	Config struct {
+	// configImpl -.
+	configImpl struct {
 		AppData   App
 		HTTPData  HTTP
 		JWTData   JWT
@@ -101,12 +101,12 @@ type (
 )
 
 // NewConfig returns app config.
-func NewConfig() (ConfigInterface, error) {
+func NewConfig() (Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
 	}
 
-	cfg := &Config{}
+	cfg := &configImpl{}
 	if err := env.Parse(cfg); err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
 	}
@@ -115,15 +115,15 @@ func NewConfig() (ConfigInterface, error) {
 }
 
 // Implementation of ConfigInter methods
-func (c *Config) App() App         { return c.AppData }
-func (c *Config) HTTP() HTTP       { return c.HTTPData }
-func (c *Config) JWT() JWT         { return c.JWTData }
-func (c *Config) Log() Log         { return c.LogData }
-func (c *Config) PG() PG           { return c.PGData }
-func (c *Config) Redis() Redis     { return c.RedisData }
-func (c *Config) Metrics() Metrics { return c.MetricsData }
-func (c *Config) Swagger() Swagger { return c.SwaggerData }
-func (c *Config) Google() Google   { return c.GoogleData }
-func (c *Config) Github() Github   { return c.GithubData }
+func (c *configImpl) App() App         { return c.AppData }
+func (c *configImpl) HTTP() HTTP       { return c.HTTPData }
+func (c *configImpl) JWT() JWT         { return c.JWTData }
+func (c *configImpl) Log() Log         { return c.LogData }
+func (c *configImpl) PG() PG           { return c.PGData }
+func (c *configImpl) Redis() Redis     { return c.RedisData }
+func (c *configImpl) Metrics() Metrics { return c.MetricsData }
+func (c *configImpl) Swagger() Swagger { return c.SwaggerData }
+func (c *configImpl) Google() Google   { return c.GoogleData }
+func (c *configImpl) Github() Github   { return c.GithubData }
 
-// func (c *Config) GRPC() GRPC    { return c.GRPCData }
+// func (c *configImpl) GRPC() GRPC    { return c.GRPCData }

@@ -23,26 +23,23 @@ import (
 )
 
 // Run creates objects via constructors.
-func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
+func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
 	fx.New(
 		fx.Supply(
 			fx.Annotate(
 				cfg,
-				fx.As(new(config.ConfigInterface)),
+				fx.As(new(config.Config)),
 			),
 		),
 
 		fx.Provide(
 			// logger
-			fx.Annotate(
-				func(cfg config.ConfigInterface) *logger.Logger {
-					return logger.New(cfg.Log().Dir, cfg.Log().Level)
-				},
-				fx.As(new(logger.Interface)),
-			),
+			func(cfg config.Config) logger.Logger {
+				return logger.New(cfg.Log().Dir, cfg.Log().Level)
+			},
 			// postgres
 			fx.Annotate(
-				func(cfg config.ConfigInterface, logger logger.Interface) (*postgres.Postgres, error) {
+				func(cfg config.Config, logger logger.Logger) (*postgres.Postgres, error) {
 					pg, err := postgres.New(cfg.PG().URL, postgres.MaxPoolSize(cfg.PG().PoolMax))
 					if err != nil {
 						logger.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
@@ -52,7 +49,7 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 					logger.Info("app - Run - postgres connected")
 					return pg, nil
 				},
-				fx.OnStop(func(logger logger.Interface, pg *postgres.Postgres) error {
+				fx.OnStop(func(logger logger.Logger, pg *postgres.Postgres) error {
 					logger.Info("app - Run - postgres closed")
 					pg.Close()
 					return nil
@@ -60,7 +57,7 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 			),
 			// redis
 			fx.Annotate(
-				func(cfg config.ConfigInterface, logger logger.Interface) (*redis.Redis, error) {
+				func(cfg config.Config, logger logger.Logger) (*redis.Redis, error) {
 					rdb, err := redis.New(cfg.Redis().URL, redis.MaxPoolSize(cfg.Redis().PoolMax))
 					if err != nil {
 						logger.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
@@ -70,7 +67,7 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 					logger.Info("app - Run - redis connected")
 					return rdb, nil
 				},
-				fx.OnStop(func(logger logger.Interface, rdb *redis.Redis) error {
+				fx.OnStop(func(logger logger.Logger, rdb *redis.Redis) error {
 					logger.Info("app - Run - redis closed")
 
 					rdb.Close()
@@ -78,34 +75,25 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 				}),
 			),
 			// jwt
-			fx.Annotate(
-				func() *jwt.JWTManager {
-					return jwt.NewJWTManager(jwt.Issuer(cfg.App().Name), jwt.Secret(cfg.JWT().SECRET))
-				},
-				fx.As(new(jwt.JWTManagerInterface)),
-			),
+			func() jwt.JWT {
+				return jwt.NewJWT(jwt.Issuer(cfg.App().Name), jwt.Secret(cfg.JWT().SECRET))
+			},
 			// github oauth2
-			fx.Annotate(
-				func() *github.Client {
-					return github.Setup(
-						github.ClientID(cfg.Github().ClientID),
-						github.ClientSecret(cfg.Github().ClientSecret),
-						github.RedirectURL(cfg.Github().RedirectURL),
-					)
-				},
-				fx.As(new(github.ClientInter)),
-			),
+			func() github.Client {
+				return github.Setup(
+					github.ClientID(cfg.Github().ClientID),
+					github.ClientSecret(cfg.Github().ClientSecret),
+					github.RedirectURL(cfg.Github().RedirectURL),
+				)
+			},
 			// google oauth2
-			fx.Annotate(
-				func() *google.Client {
-					return google.Setup(
-						google.ClientID(cfg.Google().ClientID),
-						google.ClientSecret(cfg.Google().ClientSecret),
-						google.RedirectURL(cfg.Google().RedirectURL),
-					)
-				},
-				fx.As(new(google.ClientInter)),
-			),
+			func() google.Client {
+				return google.Setup(
+					google.ClientID(cfg.Google().ClientID),
+					google.ClientSecret(cfg.Google().ClientSecret),
+					google.RedirectURL(cfg.Google().RedirectURL),
+				)
+			},
 			// gin
 			router.NewRouter,
 			// api router
@@ -113,7 +101,7 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 			// open-api router
 			openapi_router.NewOpenAPIRouter,
 			// http server
-			func(cfg config.ConfigInterface, handler *gin.Engine) *httpserver.Server {
+			func(cfg config.Config, handler *gin.Engine) httpserver.Server {
 				return httpserver.New(handler, httpserver.Port(cfg.HTTP().Port))
 			},
 		),
@@ -129,8 +117,8 @@ func Run(cfg config.ConfigInterface) { //nolint: gocyclo,cyclop,funlen,gocritic,
 func startHTTPServer(
 	lc fx.Lifecycle,
 	sd fx.Shutdowner,
-	httpServer *httpserver.Server,
-	logger logger.Interface,
+	httpServer httpserver.Server,
+	logger logger.Logger,
 ) {
 	lc.Append(
 		fx.Hook{
@@ -145,7 +133,7 @@ func startHTTPServer(
 					}
 				}()
 
-				logger.Info("http server - Listening on ", httpServer.Address)
+				logger.Info("http server - Listening on ", httpServer.GetAddress())
 				return nil
 			},
 			// stop

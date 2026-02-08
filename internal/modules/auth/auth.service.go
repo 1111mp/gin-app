@@ -14,9 +14,9 @@ import (
 )
 
 type authServiceImpl struct {
-	logger       logger.Interface
-	githubClient github.ClientInter
-	googleClient google.ClientInter
+	logger       logger.Logger
+	githubClient github.Client
+	googleClient google.Client
 }
 
 type AuthService interface {
@@ -26,9 +26,9 @@ type AuthService interface {
 }
 
 func NewAuthService(
-	logger logger.Interface,
-	githubClient github.ClientInter,
-	googleClient google.ClientInter,
+	logger logger.Logger,
+	githubClient github.Client,
+	googleClient google.Client,
 ) AuthService {
 	return &authServiceImpl{logger, githubClient, googleClient}
 }

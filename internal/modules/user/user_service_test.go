@@ -26,7 +26,7 @@ func TestCreateUser(t *testing.T) {
 	defer ctrl.Finish()
 
 	repository := NewMockUserRepository(ctrl)
-	jwt := NewMockJWTManagerInterface(ctrl)
+	jwt := NewMockJWT(ctrl)
 	userService := user.NewUserService(jwt, repository)
 
 	ctx := context.Background()

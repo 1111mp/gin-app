@@ -12,7 +12,7 @@ import (
 )
 
 type userServiceImpl struct {
-	jwt            jwt.JWTManagerInterface
+	jwt            jwt.JWT
 	userRepository UserRepository
 }
 
@@ -22,7 +22,7 @@ type UserService interface {
 }
 
 func NewUserService(
-	jwt jwt.JWTManagerInterface,
+	jwt jwt.JWT,
 	userRepository UserRepository,
 ) UserService {
 	return &userServiceImpl{jwt, userRepository}

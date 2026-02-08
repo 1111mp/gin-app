@@ -9,7 +9,7 @@ import (
 	"github.com/1111mp/gin-app/pkg/postgres"
 )
 
-type accessTokenRepositoryimpl struct {
+type accessTokenRepositoryImpl struct {
 	pg *postgres.Postgres
 }
 
@@ -19,11 +19,11 @@ type AccessTokenRepository interface {
 }
 
 func NewAccessTokenRepository(pg *postgres.Postgres) AccessTokenRepository {
-	return &accessTokenRepositoryimpl{pg}
+	return &accessTokenRepositoryImpl{pg}
 }
 
 // CreateOne -.
-func (a *accessTokenRepositoryimpl) CreateOne(
+func (a *accessTokenRepositoryImpl) CreateOne(
 	ctx context.Context,
 	userId int,
 	dto dto.AccessTokenCreateOneDto,
@@ -38,7 +38,7 @@ func (a *accessTokenRepositoryimpl) CreateOne(
 }
 
 // GetByOwner -.
-func (a *accessTokenRepositoryimpl) GetByOwner(
+func (a *accessTokenRepositoryImpl) GetByOwner(
 	ctx context.Context,
 	owner int,
 ) ([]*ent.AccessToken, error) {

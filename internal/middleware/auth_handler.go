@@ -12,7 +12,7 @@ import (
 )
 
 // APIAuthHandler -.
-func APIAuthHandler(j jwt.JWTManagerInterface, name string) gin.HandlerFunc {
+func APIAuthHandler(j jwt.JWT, name string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token, err := ctx.Cookie(name)
 		if err != nil {

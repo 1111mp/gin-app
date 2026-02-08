@@ -6,29 +6,29 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-//go:generate mockgen -source=jwt.go -destination=../../internal/service/api/mocks_jwt_test.go -package=api_service_test
+//go:generate mockgen -source=jwt.go -destination=../../internal/modules/user/mocks_jwt_test.go -package=user_test
 
 const (
 	__defaultExpire = 24 * time.Hour
 	__deaultIssuer  = "gin-app"
 )
 
-// JWTManagerInterface -.
-type JWTManagerInterface interface {
+// JWT -.
+type JWT interface {
 	GenerateToken(userId int) (string, error)
 	ParseToken(t string) (*Claims, error)
 }
 
-// JWTManager -.
-type JWTManager struct {
+// jwtImpl -.
+type jwtImpl struct {
 	expire time.Duration
 	issuer string
 	secret []byte
 }
 
-// NewJWTManager -.
-func NewJWTManager(opts ...Option) *JWTManager {
-	m := &JWTManager{
+// NewJWT -.
+func NewJWT(opts ...Option) JWT {
+	m := &jwtImpl{
 		expire: __defaultExpire,
 		issuer: __deaultIssuer,
 		secret: nil,
@@ -49,7 +49,7 @@ type Claims struct {
 }
 
 // GenerateToken -.
-func (m *JWTManager) GenerateToken(userId int) (string, error) {
+func (m *jwtImpl) GenerateToken(userId int) (string, error) {
 	claims := &Claims{
 		userId,
 		jwt.RegisteredClaims{
@@ -64,7 +64,7 @@ func (m *JWTManager) GenerateToken(userId int) (string, error) {
 }
 
 // ParseToken -.
-func (m *JWTManager) ParseToken(t string) (*Claims, error) {
+func (m *jwtImpl) ParseToken(t string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(t, &Claims{}, func(t *jwt.Token) (any, error) {
 		return m.secret, nil
 	})

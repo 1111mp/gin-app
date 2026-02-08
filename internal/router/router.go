@@ -36,10 +36,10 @@ import (
 // @in												header
 // @name											PRIVATE-TOKEN
 func NewRouter(
-	cfg config.ConfigInterface,
-	logger logger.Interface,
+	cfg config.Config,
+	logger logger.Logger,
 ) *gin.Engine {
-	app := gin.Default()
+	app := gin.New()
 
 	// apply middlewares
 	app.Use(requestid.New())

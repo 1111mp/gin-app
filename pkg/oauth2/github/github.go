@@ -8,15 +8,15 @@ import (
 	oauth2gh "golang.org/x/oauth2/github"
 )
 
-// ClientInter -.
-type ClientInter interface {
+// Client -.
+type Client interface {
 	GetAuthURL(state string) string
 	GetToken(ctx context.Context, code string) (*oauth2.Token, error)
 	GetUser(ctx context.Context, token *oauth2.Token) (*go_github.User, error)
 }
 
-// Client -.
-type Client struct {
+// clientImpl -.
+type clientImpl struct {
 	ClientID     string
 	ClientSecret string
 	RedirectURL  string
@@ -25,8 +25,8 @@ type Client struct {
 }
 
 // Setup -.
-func Setup(opts ...Option) *Client {
-	client := &Client{}
+func Setup(opts ...Option) Client {
+	client := &clientImpl{}
 
 	// Custom options
 	for _, opt := range opts {
@@ -45,17 +45,17 @@ func Setup(opts ...Option) *Client {
 }
 
 // GetAuthURL -.
-func (o *Client) GetAuthURL(state string) string {
+func (o *clientImpl) GetAuthURL(state string) string {
 	return o.config.AuthCodeURL(state)
 }
 
 // GetToken -.
-func (o *Client) GetToken(ctx context.Context, code string) (*oauth2.Token, error) {
+func (o *clientImpl) GetToken(ctx context.Context, code string) (*oauth2.Token, error) {
 	return o.config.Exchange(ctx, code)
 }
 
 // GetUser -.
-func (o *Client) GetUser(ctx context.Context, token *oauth2.Token) (*go_github.User, error) {
+func (o *clientImpl) GetUser(ctx context.Context, token *oauth2.Token) (*go_github.User, error) {
 	client := go_github.NewClient(o.config.Client(ctx, token))
 
 	user, _, err := client.Users.Get(ctx, "")

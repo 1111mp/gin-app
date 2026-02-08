@@ -11,7 +11,7 @@ import (
 )
 
 // ErrorHandler captures errors and returns a consistent JSON error response.
-func ErrorHandler(logger logger.Interface) gin.HandlerFunc {
+func ErrorHandler(logger logger.Logger) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.Next()
 

@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Interface -.
-type Interface interface {
+// Logger -.
+type Logger interface {
 	Logger() *zap.Logger
 
 	Debug(args ...interface{})
@@ -31,16 +31,16 @@ type Interface interface {
 	Errorw(template string, args ...interface{})
 }
 
-// Logger -.
-type Logger struct {
+// loggerImpl -.
+type loggerImpl struct {
 	logger *zap.Logger
 	sugar  *zap.SugaredLogger
 }
 
-var _ Interface = (*Logger)(nil)
+var _ Logger = (*loggerImpl)(nil)
 
 // New -.
-func New(dir string, level string) *Logger {
+func New(dir string, level string) Logger {
 	var l zapcore.Level
 
 	switch strings.ToLower(level) {
@@ -86,7 +86,7 @@ func New(dir string, level string) *Logger {
 	core = zapcore.NewTee(cores...)
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
-	return &Logger{
+	return &loggerImpl{
 		logger: logger,
 		sugar:  logger.Sugar(),
 	}
@@ -108,61 +108,61 @@ func getLogWriter(filename string) io.Writer {
 	}
 }
 
-func (l *Logger) Logger() *zap.Logger {
+func (l *loggerImpl) Logger() *zap.Logger {
 	return l.logger
 }
 
 // Debug -.
-func (l *Logger) Debug(args ...interface{}) {
+func (l *loggerImpl) Debug(args ...interface{}) {
 	l.sugar.Debug(args...)
 }
 
 // Info -.
-func (l *Logger) Info(args ...interface{}) {
+func (l *loggerImpl) Info(args ...interface{}) {
 	l.sugar.Info(args...)
 }
 
 // Warn -.
-func (l *Logger) Warn(args ...interface{}) {
+func (l *loggerImpl) Warn(args ...interface{}) {
 	l.sugar.Warn(args...)
 }
 
 // Error -.
-func (l *Logger) Error(args ...interface{}) {
+func (l *loggerImpl) Error(args ...interface{}) {
 	l.sugar.Error(args...)
 }
 
 // Fatal -.
-func (l *Logger) Fatal(args ...interface{}) {
+func (l *loggerImpl) Fatal(args ...interface{}) {
 	l.sugar.Fatal(args...)
 }
 
 // Debugf -.
-func (l *Logger) Debugf(template string, args ...interface{}) {
+func (l *loggerImpl) Debugf(template string, args ...interface{}) {
 	l.sugar.Debugf(template, args...)
 }
 
 // Infof -.
-func (l *Logger) Infof(template string, args ...interface{}) {
+func (l *loggerImpl) Infof(template string, args ...interface{}) {
 	l.sugar.Infof(template, args...)
 }
 
 // Warnf -.
-func (l *Logger) Warnf(template string, args ...interface{}) {
+func (l *loggerImpl) Warnf(template string, args ...interface{}) {
 	l.sugar.Warnf(template, args...)
 }
 
 // Errorf -.
-func (l *Logger) Errorf(template string, args ...interface{}) {
+func (l *loggerImpl) Errorf(template string, args ...interface{}) {
 	l.sugar.Errorf(template, args...)
 }
 
 // Fatalf -.
-func (l *Logger) Fatalf(template string, args ...interface{}) {
+func (l *loggerImpl) Fatalf(template string, args ...interface{}) {
 	l.sugar.Fatalf(template, args...)
 }
 
 // Errorw -.
-func (l *Logger) Errorw(msg string, keysAndValues ...interface{}) {
+func (l *loggerImpl) Errorw(msg string, keysAndValues ...interface{}) {
 	l.sugar.Errorw(msg, keysAndValues...)
 }

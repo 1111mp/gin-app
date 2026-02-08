@@ -23,8 +23,8 @@ type APIRouterParams struct {
 }
 
 func NewAPIRouter(
-	cfg config.ConfigInterface,
-	jwt jwt.JWTManagerInterface,
+	cfg config.Config,
+	jwt jwt.JWT,
 	app *gin.Engine,
 ) APIRouter {
 	public := app.Group("/api/v1")

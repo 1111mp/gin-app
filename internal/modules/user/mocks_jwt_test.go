@@ -16,32 +16,32 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockJWTManagerInterface is a mock of JWTManagerInterface interface.
-type MockJWTManagerInterface struct {
+// MockJWT is a mock of JWT interface.
+type MockJWT struct {
 	ctrl     *gomock.Controller
-	recorder *MockJWTManagerInterfaceMockRecorder
+	recorder *MockJWTMockRecorder
 	isgomock struct{}
 }
 
-// MockJWTManagerInterfaceMockRecorder is the mock recorder for MockJWTManagerInterface.
-type MockJWTManagerInterfaceMockRecorder struct {
-	mock *MockJWTManagerInterface
+// MockJWTMockRecorder is the mock recorder for MockJWT.
+type MockJWTMockRecorder struct {
+	mock *MockJWT
 }
 
-// NewMockJWTManagerInterface creates a new mock instance.
-func NewMockJWTManagerInterface(ctrl *gomock.Controller) *MockJWTManagerInterface {
-	mock := &MockJWTManagerInterface{ctrl: ctrl}
-	mock.recorder = &MockJWTManagerInterfaceMockRecorder{mock}
+// NewMockJWT creates a new mock instance.
+func NewMockJWT(ctrl *gomock.Controller) *MockJWT {
+	mock := &MockJWT{ctrl: ctrl}
+	mock.recorder = &MockJWTMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockJWTManagerInterface) EXPECT() *MockJWTManagerInterfaceMockRecorder {
+func (m *MockJWT) EXPECT() *MockJWTMockRecorder {
 	return m.recorder
 }
 
 // GenerateToken mocks base method.
-func (m *MockJWTManagerInterface) GenerateToken(userId int) (string, error) {
+func (m *MockJWT) GenerateToken(userId int) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateToken", userId)
 	ret0, _ := ret[0].(string)
@@ -50,13 +50,13 @@ func (m *MockJWTManagerInterface) GenerateToken(userId int) (string, error) {
 }
 
 // GenerateToken indicates an expected call of GenerateToken.
-func (mr *MockJWTManagerInterfaceMockRecorder) GenerateToken(userId any) *gomock.Call {
+func (mr *MockJWTMockRecorder) GenerateToken(userId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockJWTManagerInterface)(nil).GenerateToken), userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockJWT)(nil).GenerateToken), userId)
 }
 
 // ParseToken mocks base method.
-func (m *MockJWTManagerInterface) ParseToken(t string) (*jwt.Claims, error) {
+func (m *MockJWT) ParseToken(t string) (*jwt.Claims, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ParseToken", t)
 	ret0, _ := ret[0].(*jwt.Claims)
@@ -65,7 +65,7 @@ func (m *MockJWTManagerInterface) ParseToken(t string) (*jwt.Claims, error) {
 }
 
 // ParseToken indicates an expected call of ParseToken.
-func (mr *MockJWTManagerInterfaceMockRecorder) ParseToken(t any) *gomock.Call {
+func (mr *MockJWTMockRecorder) ParseToken(t any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseToken", reflect.TypeOf((*MockJWTManagerInterface)(nil).ParseToken), t)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseToken", reflect.TypeOf((*MockJWT)(nil).ParseToken), t)
 }
