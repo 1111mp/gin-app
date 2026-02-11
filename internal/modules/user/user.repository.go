@@ -11,14 +11,14 @@ import (
 
 //go:generate mockgen -source=user_repository.go -destination=./mocks_user_repo_test.go -package=user_test
 
-type userRepositoryImpl struct {
-	pg *postgres.Postgres
-}
-
-// UserRepositoryInter -.
+// UserRepository -.
 type UserRepository interface {
 	CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.User, error)
 	GetById(ctx context.Context, id int) (*ent.User, error)
+}
+
+type userRepositoryImpl struct {
+	pg *postgres.Postgres
 }
 
 func NewUserRepository(pg *postgres.Postgres) UserRepository {

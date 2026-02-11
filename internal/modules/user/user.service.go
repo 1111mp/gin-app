@@ -11,20 +11,17 @@ import (
 	"github.com/1111mp/gin-app/pkg/jwt"
 )
 
-type userServiceImpl struct {
-	jwt            jwt.JWT
-	userRepository UserRepository
-}
-
 type UserService interface {
 	CreateOne(ctx context.Context, dto dto.UserCreateOneDto) (*ent.UserEntity, string, error)
 	GetById(ctx context.Context, id int) (*ent.UserEntity, error)
 }
 
-func NewUserService(
-	jwt jwt.JWT,
-	userRepository UserRepository,
-) UserService {
+type userServiceImpl struct {
+	jwt            jwt.JWT
+	userRepository UserRepository
+}
+
+func NewUserService(jwt jwt.JWT, userRepository UserRepository) UserService {
 	return &userServiceImpl{jwt, userRepository}
 }
 

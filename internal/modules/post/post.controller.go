@@ -13,9 +13,7 @@ type PostController struct {
 	postService PostService
 }
 
-func NewPostController(
-	postService PostService,
-) *PostController {
+func NewPostController(postService PostService) *PostController {
 	return &PostController{postService}
 }
 

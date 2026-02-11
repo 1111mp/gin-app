@@ -10,13 +10,13 @@ import (
 	"github.com/1111mp/gin-app/pkg/errors"
 )
 
-type postServiceImpl struct {
-	postRepository PostRepository
-}
-
 type PostService interface {
 	CreateOne(ctx context.Context, userId int, dto dto.PostCreateOneDto) (*ent.PostEntity, error)
 	GetById(ctx context.Context, id int) (*ent.PostEntity, error)
+}
+
+type postServiceImpl struct {
+	postRepository PostRepository
 }
 
 func NewPostService(

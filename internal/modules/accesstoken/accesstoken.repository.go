@@ -9,13 +9,13 @@ import (
 	"github.com/1111mp/gin-app/pkg/postgres"
 )
 
-type accessTokenRepositoryImpl struct {
-	pg *postgres.Postgres
-}
-
 type AccessTokenRepository interface {
 	CreateOne(ctx context.Context, userId int, dto dto.AccessTokenCreateOneDto) (*ent.AccessToken, error)
 	GetByOwner(ctx context.Context, owner int) ([]*ent.AccessToken, error)
+}
+
+type accessTokenRepositoryImpl struct {
+	pg *postgres.Postgres
 }
 
 func NewAccessTokenRepository(pg *postgres.Postgres) AccessTokenRepository {

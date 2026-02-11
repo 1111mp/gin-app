@@ -11,15 +11,9 @@ var Module = fx.Module(
 
 	fx.Provide(
 		// post repository
-		fx.Annotate(
-			NewPostRepository,
-			fx.As(new(PostRepository)),
-		),
+		NewPostRepository,
 		// post service
-		fx.Annotate(
-			NewPostService,
-			fx.As(new(PostService)),
-		),
+		NewPostService,
 		// post controller
 		NewPostController,
 	),

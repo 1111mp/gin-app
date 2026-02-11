@@ -9,13 +9,13 @@ import (
 	"github.com/1111mp/gin-app/pkg/postgres"
 )
 
-type postRepositoryImpl struct {
-	pg *postgres.Postgres
-}
-
 type PostRepository interface {
 	CreateOne(ctx context.Context, userId int, dto dto.PostCreateOneDto) (*ent.Post, error)
 	GetById(ctx context.Context, id int) (*ent.Post, error)
+}
+
+type postRepositoryImpl struct {
+	pg *postgres.Postgres
 }
 
 func NewPostRepository(pg *postgres.Postgres) PostRepository {

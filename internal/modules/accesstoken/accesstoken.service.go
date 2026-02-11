@@ -8,13 +8,13 @@ import (
 	"github.com/1111mp/gin-app/pkg/errors"
 )
 
-type accessTokenServiceImpl struct {
-	accessTokenRepository AccessTokenRepository
-}
-
 type AccessTokenService interface {
 	CreateOne(ctx context.Context, userId int, dto dto.AccessTokenCreateOneDto) (*ent.AccessTokenEntity, error)
 	GetByOwner(ctx context.Context, owner int) ([]*ent.AccessTokenEntity, error)
+}
+
+type accessTokenServiceImpl struct {
+	accessTokenRepository AccessTokenRepository
 }
 
 func NewAccessTokenService(accessTokenRepository AccessTokenRepository) AccessTokenService {

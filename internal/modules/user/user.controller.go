@@ -15,10 +15,7 @@ type UserController struct {
 	userService UserService
 }
 
-func NewUserController(
-	cfg config.Config,
-	userService UserService,
-) *UserController {
+func NewUserController(cfg config.Config, userService UserService) *UserController {
 	return &UserController{cfg, userService}
 }
 

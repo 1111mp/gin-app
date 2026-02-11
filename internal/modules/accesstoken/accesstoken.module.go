@@ -11,15 +11,9 @@ var Module = fx.Module(
 
 	fx.Provide(
 		// accessToken repository
-		fx.Annotate(
-			NewAccessTokenRepository,
-			fx.As(new(AccessTokenRepository)),
-		),
+		NewAccessTokenRepository,
 		// accessToken service
-		fx.Annotate(
-			NewAccessTokenService,
-			fx.As(new(AccessTokenService)),
-		),
+		NewAccessTokenService,
 		// accessToken controller
 		NewAccessTokenController,
 	),
@@ -39,7 +33,6 @@ var Module = fx.Module(
 			accessTokenGroup := router.Private.Group("/access-tokens")
 
 			accessTokenGroup.POST("", utils.HandlerWithUser(accessTokenController.CreateOne))
-
 			accessTokenGroup.GET("", utils.HandlerWithUser(accessTokenController.GetSelfTokens))
 			accessTokenGroup.GET("/:owner", accessTokenController.GetTokensByOwner)
 		}

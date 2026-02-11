@@ -10,15 +10,9 @@ var Module = fx.Module(
 
 	fx.Provide(
 		// user repository
-		fx.Annotate(
-			NewUserRepository,
-			fx.As(new(UserRepository)),
-		),
+		NewUserRepository,
 		// user service
-		fx.Annotate(
-			NewUserService,
-			fx.As(new(UserService)),
-		),
+		NewUserService,
 		// user controller
 		NewUserController,
 	),

@@ -13,16 +13,16 @@ import (
 	"go.uber.org/zap"
 )
 
-type authServiceImpl struct {
-	logger       logger.Logger
-	githubClient github.Client
-	googleClient google.Client
-}
-
 type AuthService interface {
 	Login(dto dto.AuthLoginDto) (string, error)
 	GithubCallback(ctx context.Context, dto dto.AuthCallbackDto) (*oauth2.State, error)
 	GoogleCallback(ctx context.Context, dto dto.AuthCallbackDto) (*oauth2.State, error)
+}
+
+type authServiceImpl struct {
+	logger       logger.Logger
+	githubClient github.Client
+	googleClient google.Client
 }
 
 func NewAuthService(

@@ -10,10 +10,7 @@ var Module = fx.Module(
 
 	fx.Provide(
 		// auth service
-		fx.Annotate(
-			NewAuthService,
-			fx.As(new(AuthService)),
-		),
+		NewAuthService,
 		// auth controller
 		NewAuthController,
 	),
