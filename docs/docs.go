@@ -180,6 +180,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/auth/login-with-account": {
+            "post": {
+                "description": "Login with account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login with account",
+                "operationId": "AuthLoginWithAccount",
+                "parameters": [
+                    {
+                        "description": "Login data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AuthLoginWithAccountDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to login page",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (invalid params)",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/posts": {
             "post": {
                 "description": "Creates a new post resource",
@@ -406,6 +453,26 @@ const docTemplate = `{
                 },
                 "owner": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.AuthLoginWithAccountDto": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 12
+                },
+                "redirect_url": {
+                    "type": "string"
                 }
             }
         },

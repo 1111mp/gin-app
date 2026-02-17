@@ -9,6 +9,8 @@ var Module = fx.Module(
 	"auth",
 
 	fx.Provide(
+		// auth repository
+		NewAuthRepository,
 		// auth service
 		NewAuthService,
 		// auth controller
@@ -22,16 +24,16 @@ var Module = fx.Module(
 	) {
 		// public routers
 		{
-			// authGroup := router.Public.Group("/auth")
+			authGroup := router.Public.Group("/auth")
+			authGroup.GET("/login", authController.Login)
+			authGroup.GET("/callback/google", authController.GoogleCallback)
+			authGroup.GET("/callback/github", authController.GithubCallback)
+			authGroup.POST("/login-with-account", authController.LoginWithAccount)
 		}
 
 		// private routers
 		{
-			authGroup := router.Private.Group("/auth")
-
-			authGroup.GET("/login", authController.Login)
-			authGroup.GET("/callback/google", authController.GoogleCallback)
-			authGroup.GET("/callback/github", authController.GithubCallback)
+			// authGroup := router.Private.Group("/auth")
 		}
 	}),
 )

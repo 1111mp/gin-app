@@ -4,6 +4,8 @@
 # Config
 .env
 
+.DS_Store
+
 # Log
 logs/
 

@@ -12,6 +12,20 @@ definitions:
     - name
     - owner
     type: object
+  dto.AuthLoginWithAccountDto:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 12
+        type: string
+      redirect_url:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   dto.PostCreateOneDto:
     properties:
       category:
@@ -256,6 +270,37 @@ paths:
           schema:
             $ref: '#/definitions/errors.APIError'
       summary: Redirect to GitHub OAuth2 login page
+      tags:
+      - Auth
+  /api/v1/auth/login-with-account:
+    post:
+      consumes:
+      - application/json
+      description: Login with account
+      operationId: AuthLoginWithAccount
+      parameters:
+      - description: Login data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AuthLoginWithAccountDto'
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to login page
+          schema:
+            type: string
+        "400":
+          description: Bad request (invalid params)
+          schema:
+            $ref: '#/definitions/errors.APIError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.APIError'
+      summary: Login with account
       tags:
       - Auth
   /api/v1/posts:

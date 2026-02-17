@@ -4,33 +4,41 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/internal/dto"
 	"github.com/1111mp/gin-app/pkg/errors"
+	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/1111mp/gin-app/pkg/oauth2"
 	"github.com/1111mp/gin-app/pkg/oauth2/github"
 	"github.com/1111mp/gin-app/pkg/oauth2/google"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
 	Login(dto dto.AuthLoginDto) (string, error)
+	LoginWithAccount(ctx context.Context, dto dto.AuthLoginWithAccountDto) (string, error)
 	GithubCallback(ctx context.Context, dto dto.AuthCallbackDto) (*oauth2.State, error)
 	GoogleCallback(ctx context.Context, dto dto.AuthCallbackDto) (*oauth2.State, error)
 }
 
 type authServiceImpl struct {
-	logger       logger.Logger
-	githubClient github.Client
-	googleClient google.Client
+	logger         logger.Logger
+	jwt            jwt.JWT
+	githubClient   github.Client
+	googleClient   google.Client
+	authRepository AuthRepository
 }
 
 func NewAuthService(
 	logger logger.Logger,
+	jwt jwt.JWT,
 	githubClient github.Client,
 	googleClient google.Client,
+	authRepository AuthRepository,
 ) AuthService {
-	return &authServiceImpl{logger, githubClient, googleClient}
+	return &authServiceImpl{logger, jwt, githubClient, googleClient, authRepository}
 }
 
 // Login -.
@@ -55,6 +63,43 @@ func (a *authServiceImpl) Login(dto dto.AuthLoginDto) (string, error) {
 	}
 
 	return redirectURL, nil
+}
+
+// LoginWithAccount -.
+func (a *authServiceImpl) LoginWithAccount(ctx context.Context, dto dto.AuthLoginWithAccountDto) (string, error) {
+	user, err := a.authRepository.GetByEmail(ctx, dto.Email)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", errors.ErrUnauthorized
+		}
+
+		return "", errors.WrapAPIError(
+			errors.ErrInternalServerError,
+			errors.NewRepositoryError(
+				err.Error(),
+				err,
+			),
+		)
+	}
+
+	// compare password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password))
+	if err != nil {
+		return "", errors.ErrUnauthorized
+	}
+
+	token, err := a.jwt.GenerateToken(user.ID)
+	if err != nil {
+		return "", errors.WrapAPIError(
+			errors.ErrInternalServerError,
+			errors.NewRepositoryError(
+				err.Error(),
+				err,
+			),
+		)
+	}
+
+	return token, nil
 }
 
 // GithubCallback -.
