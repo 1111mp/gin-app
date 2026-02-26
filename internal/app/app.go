@@ -11,6 +11,7 @@ import (
 	"github.com/1111mp/gin-app/internal/router"
 	api_router "github.com/1111mp/gin-app/internal/router/api"
 	openapi_router "github.com/1111mp/gin-app/internal/router/open-api"
+	"github.com/1111mp/gin-app/internal/rpc"
 	"github.com/1111mp/gin-app/pkg/httpserver"
 	"github.com/1111mp/gin-app/pkg/jwt"
 	"github.com/1111mp/gin-app/pkg/logger"
@@ -105,10 +106,10 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 				return httpserver.New(handler, httpserver.Port(cfg.HTTP().Port))
 			},
 		),
-
+		// rpc
+		rpc.Module,
 		// api
 		modules.APIModule,
-
 		// start http server
 		fx.Invoke(startHTTPServer),
 	).Run()
@@ -117,8 +118,8 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 func startHTTPServer(
 	lc fx.Lifecycle,
 	sd fx.Shutdowner,
-	httpServer httpserver.Server,
 	logger logger.Logger,
+	httpServer httpserver.Server,
 ) {
 	lc.Append(
 		fx.Hook{

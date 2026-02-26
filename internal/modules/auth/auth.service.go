@@ -13,7 +13,6 @@ import (
 	"github.com/1111mp/gin-app/pkg/oauth2/github"
 	"github.com/1111mp/gin-app/pkg/oauth2/google"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
@@ -83,8 +82,7 @@ func (a *authServiceImpl) LoginWithAccount(ctx context.Context, dto dto.AuthLogi
 	}
 
 	// compare password
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(dto.Password))
-	if err != nil {
+	if err := user.ComparePassword(dto.Password); err != nil {
 		return "", errors.ErrUnauthorized
 	}
 

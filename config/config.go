@@ -17,6 +17,7 @@ type (
 		PG() PG
 		Redis() Redis
 		// GRPC() GRPC
+		RMQ() RMQ
 		Metrics() Metrics
 		Swagger() Swagger
 		Github() Github
@@ -32,6 +33,7 @@ type (
 		PGData    PG
 		RedisData Redis
 		// GRPCData    GRPC
+		RMQData     RMQ
 		MetricsData Metrics
 		SwaggerData Swagger
 		GoogleData  Google
@@ -76,6 +78,13 @@ type (
 	// GRPC struct {
 	// 	Port string `env:"GRPC_PORT,required"`
 	// }
+
+	// RMQ -.
+	RMQ struct {
+		ServerExchange string `env:"RMQ_RPC_SERVER,required"`
+		ClientExchange string `env:"RMQ_RPC_CLIENT,required"`
+		URL            string `env:"RMQ_URL,required"`
+	}
 
 	// Metrics -.
 	Metrics struct {
@@ -127,3 +136,4 @@ func (c *configImpl) Google() Google   { return c.GoogleData }
 func (c *configImpl) Github() Github   { return c.GithubData }
 
 // func (c *configImpl) GRPC() GRPC    { return c.GRPCData }
+func (c *configImpl) RMQ() RMQ { return c.RMQData }

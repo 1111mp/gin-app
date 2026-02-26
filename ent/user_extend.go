@@ -1,5 +1,7 @@
 package ent
 
+import "golang.org/x/crypto/bcrypt"
+
 // UserEntity -.
 type UserEntity struct {
 	ID         int           `json:"id,omitempty"`
@@ -28,4 +30,9 @@ func (u *User) IntoEntity() *UserEntity {
 	}
 
 	return userEntity
+}
+
+// compare user password with given password
+func (u *User) ComparePassword(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 }
