@@ -140,7 +140,7 @@ func (c *Client) RemoteCall(handler string, request, response any) error {
 
 	switch call.status {
 	case rmqrpc.Success:
-		err = json.Unmarshal(call.body, &response)
+		err = json.Unmarshal(call.body, response)
 		if err != nil {
 			return fmt.Errorf("rmq_rpc client - Client - RemoteCall - json.Unmarshal: %w", err)
 		}

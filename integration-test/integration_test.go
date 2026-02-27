@@ -9,6 +9,13 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	protov1 "github.com/1111mp/gin-app/docs/proto/v1"
+	"github.com/1111mp/gin-app/ent"
+	"github.com/1111mp/gin-app/internal/dto"
+	rmqClient "github.com/1111mp/gin-app/pkg/rabbitmq/rmq_rpc/client"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -38,9 +45,6 @@ const (
 
 	// RabbitMQ RPC
 	natsURL = "nats://guest:guest@nats:4222/"
-
-	// Test data
-	expectedOriginal = "текст для перевода"
 )
 
 var errHealthCheck = fmt.Errorf("url %s is not available", healthPath)
@@ -118,5 +122,67 @@ func TestHTTPGetUserV1(t *testing.T) {
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+}
+
+// gRPC Client V1: GetHistory.
+func TestClientGRPCV1(t *testing.T) {
+	grpcConn, err := grpc.NewClient(grpcURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fatal("gRPC Client - init error - grpc.NewClient", err)
+	}
+
+	defer func() {
+		err = grpcConn.Close()
+		if err != nil {
+			t.Fatal("gRPC Client - shutdown error - grpcClientV1.GetHistory", err)
+		}
+	}()
+
+	grpcClientV1 := protov1.NewPostClient(grpcConn)
+
+	for range requests {
+		req := protov1.GetPostByIdRequest{Id: 1}
+		post, err := grpcClientV1.GetPostById(t.Context(), &req)
+		if err != nil {
+			t.Fatal("gRPC Client - remote call error - grpcClientV1.GetHistory", err)
+		}
+
+		if post == nil {
+			t.Fatalf("Post ID not found: expected %d", req.Id)
+		}
+
+		if post.Id != req.Id {
+			t.Fatalf("Post ID mismatch: expected %d, got %d", req.Id, post.Id)
+		}
+	}
+}
+
+// RabbitMQ RPC Client V1: GetPostById.
+func TestClientRMQRPCV1(t *testing.T) { //nolint: dupl,gocritic,nolintlint
+	client, err := rmqClient.New(rmqURL, rpcServerExchange, rpcClientExchange)
+	if err != nil {
+		t.Fatal("RabbitMQ RPC Client - init error - rmqClient.New", err)
+	}
+
+	defer func() {
+		err = client.Shutdown()
+		if err != nil {
+			t.Fatal("RabbitMQ RPC Client - shutdown error - client.RemoteCall", err)
+		}
+	}()
+
+	for range requests {
+		req := dto.GetPostByIdRequest{ID: 1}
+		var post ent.PostEntity
+
+		err = client.RemoteCall("v1.get_post_by_id", req, &post)
+		if err != nil {
+			t.Fatal("RabbitMQ RPC Client - remote call error - client.RemoteCall", err)
+		}
+
+		if post.ID != req.ID {
+			t.Fatalf("Post ID mismatch: expected %d, got %d", req.ID, post.ID)
+		}
 	}
 }

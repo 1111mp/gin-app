@@ -130,7 +130,7 @@ func startHTTPServer(
 				go func() {
 					if err := httpServer.Start(); err != nil && err != http.ErrServerClosed {
 						logger.Errorf("http server - Start HTTP Server error: %v", err)
-						sd.Shutdown()
+						_ = sd.Shutdown()
 					}
 				}()
 

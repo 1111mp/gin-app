@@ -16,7 +16,7 @@ type (
 		Log() Log
 		PG() PG
 		Redis() Redis
-		// GRPC() GRPC
+		GRPC() GRPC
 		RMQ() RMQ
 		Metrics() Metrics
 		Swagger() Swagger
@@ -26,13 +26,13 @@ type (
 
 	// configImpl -.
 	configImpl struct {
-		AppData   App
-		HTTPData  HTTP
-		JWTData   JWT
-		LogData   Log
-		PGData    PG
-		RedisData Redis
-		// GRPCData    GRPC
+		AppData     App
+		HTTPData    HTTP
+		JWTData     JWT
+		LogData     Log
+		PGData      PG
+		RedisData   Redis
+		GRPCData    GRPC
 		RMQData     RMQ
 		MetricsData Metrics
 		SwaggerData Swagger
@@ -44,6 +44,7 @@ type (
 	App struct {
 		Name    string `env:"APP_NAME,required"`
 		Version string `env:"APP_VERSION,required"`
+		Env     string `env:"ENV,required"`
 	}
 
 	// HTTP -.
@@ -74,10 +75,10 @@ type (
 		URL     string `env:"REDIS_URL,required"`
 	}
 
-	// // GRPC -.
-	// GRPC struct {
-	// 	Port string `env:"GRPC_PORT,required"`
-	// }
+	// GRPC -.
+	GRPC struct {
+		Port string `env:"GRPC_PORT,required"`
+	}
 
 	// RMQ -.
 	RMQ struct {
@@ -135,5 +136,5 @@ func (c *configImpl) Swagger() Swagger { return c.SwaggerData }
 func (c *configImpl) Google() Google   { return c.GoogleData }
 func (c *configImpl) Github() Github   { return c.GithubData }
 
-// func (c *configImpl) GRPC() GRPC    { return c.GRPCData }
-func (c *configImpl) RMQ() RMQ { return c.RMQData }
+func (c *configImpl) GRPC() GRPC { return c.GRPCData }
+func (c *configImpl) RMQ() RMQ   { return c.RMQData }

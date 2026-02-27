@@ -18,21 +18,19 @@ var Module = fx.Module(
 		// rmqrpc controller
 		NewRMQRPCControllter,
 		// rabbitmq rpc server
-		fx.Annotate(
-			func(
-				cfg config.Config,
-				logger logger.Logger,
-			) (*rmqRPCServer.Server, error) {
-				rmqServer, err := rmqRPCServer.New(cfg.RMQ().URL, cfg.RMQ().ServerExchange, logger)
-				if err != nil {
-					logger.Fatal(fmt.Errorf("app - Run - rmqServer - server.New: %w", err))
-					return nil, err
-				}
+		func(
+			cfg config.Config,
+			logger logger.Logger,
+		) (*rmqRPCServer.Server, error) {
+			rmqServer, err := rmqRPCServer.New(cfg.RMQ().URL, cfg.RMQ().ServerExchange, logger)
+			if err != nil {
+				logger.Fatal(fmt.Errorf("app - Run - rmqServer - server.New: %w", err))
+				return nil, err
+			}
 
-				logger.Info("app - Run - rmqServer - initialized")
-				return rmqServer, nil
-			},
-		),
+			logger.Info("app - Run - rmqServer - initialized")
+			return rmqServer, nil
+		},
 		// rabbitmq rpc client
 		fx.Annotate(
 			func(cfg config.Config, logger logger.Logger) (*rmqRPCClient.Client, error) {
@@ -86,9 +84,14 @@ var Module = fx.Module(
 							select {
 							case <-ctx.Done():
 								return
-							case err := <-rmqServer.Notify():
+							case err, ok := <-rmqServer.Notify():
+								if !ok {
+									return
+								}
+
 								logger.Error(fmt.Errorf("app - Run - rmqServer.Notify: %w", err))
-								sd.Shutdown()
+								// ! It's better to just shut down the app and let Kubernetes restart it.
+								_ = sd.Shutdown()
 								return
 							}
 						}

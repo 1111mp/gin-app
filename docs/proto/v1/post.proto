@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package grpc.v1;
+
+option go_package = "docs/proto/v1";
+
+// Post service provides RPC methods for post operations.
+service Post {
+  // GetPostById retrieves a post by its ID.
+  rpc GetPostById (GetPostByIdRequest) returns (GetPostByIdResponse);
+}
+
+// Request message for GetPostById.
+message GetPostByIdRequest {
+  int64 id = 1;
+}
+
+// Response message for GetPostById.
+message GetPostByIdResponse {
+  int64    id          = 1;
+  string   title       = 2;
+  string   content     = 3;
+  Category category    = 4;
+  string   create_time = 5;
+  string   update_time = 6;
+}
+
+enum Category {
+  CATEGORY_UNSPECIFIED = 0;
+  FEED                 = 1;
+  STORY                = 2;
+}
