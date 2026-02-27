@@ -20,7 +20,10 @@ import (
 
 const (
 	// Base settings
-	host     = "app"
+	// docker-compose service name
+	host = "app"
+	// test local server
+	// host     = "127.0.0.1"
 	attempts = 20
 
 	// Attempts connection
@@ -41,7 +44,10 @@ const (
 	requests          = 10
 
 	// RabbitMQ RPC
+	// docker-compose service name
 	rmqURL = "amqp://guest:guest@rabbitmq:5672/"
+	// test local server
+	// rmqURL = "amqp://guest:guest@127.0.0.1:5672/"
 
 	// RabbitMQ RPC
 	natsURL = "nats://guest:guest@nats:4222/"
@@ -109,7 +115,7 @@ func TestMain(m *testing.M) {
 
 // HTTP GET: /api/v1/user/:id
 func TestHTTPGetUserV1(t *testing.T) {
-	url := basePathV1 + "/user/1"
+	url := basePathV1 + "/users/1"
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
@@ -135,7 +141,7 @@ func TestClientGRPCV1(t *testing.T) {
 	defer func() {
 		err = grpcConn.Close()
 		if err != nil {
-			t.Fatal("gRPC Client - shutdown error - grpcClientV1.GetHistory", err)
+			t.Fatal("gRPC Client - shutdown error - grpcClientV1.GetPostById", err)
 		}
 	}()
 
@@ -145,7 +151,7 @@ func TestClientGRPCV1(t *testing.T) {
 		req := protov1.GetPostByIdRequest{Id: 1}
 		post, err := grpcClientV1.GetPostById(t.Context(), &req)
 		if err != nil {
-			t.Fatal("gRPC Client - remote call error - grpcClientV1.GetHistory", err)
+			t.Fatal("gRPC Client - remote call error - grpcClientV1.GetPostById", err)
 		}
 
 		if post == nil {

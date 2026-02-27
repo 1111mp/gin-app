@@ -46,12 +46,9 @@ func (ps *postServiceImpl) GetById(ctx context.Context, id int) (*ent.PostEntity
 	post, err := ps.postRepository.GetById(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, errors.WrapAPIError(
-				errors.NewAPIError(
-					http.StatusNotFound,
-					fmt.Sprintf("post %d not found", id),
-				),
-				err,
+			return nil, errors.NewAPIError(
+				http.StatusNotFound,
+				fmt.Sprintf("post %d not found", id),
 			)
 		}
 

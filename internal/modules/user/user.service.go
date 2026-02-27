@@ -57,12 +57,9 @@ func (us *userServiceImpl) GetById(ctx context.Context, id int) (*ent.UserEntity
 	user, err := us.userRepository.GetById(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, errors.WrapAPIError(
-				errors.NewAPIError(
-					http.StatusNotFound,
-					fmt.Sprintf("user %d not found", id),
-				),
-				err,
+			return nil, errors.NewAPIError(
+				http.StatusNotFound,
+				fmt.Sprintf("user %d not found", id),
 			)
 		}
 

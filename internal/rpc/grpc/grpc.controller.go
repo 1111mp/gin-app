@@ -6,6 +6,7 @@ import (
 
 	v1 "github.com/1111mp/gin-app/docs/proto/v1"
 	"github.com/1111mp/gin-app/internal/modules/post"
+	"github.com/1111mp/gin-app/pkg/logger"
 )
 
 type GRPCControllter interface {
@@ -15,11 +16,13 @@ type GRPCControllter interface {
 type grpcControllterImpl struct {
 	v1.PostServer
 
+	logger      logger.Logger
 	postService post.PostService
 }
 
-func NewGRPCControllter(postService post.PostService) GRPCControllter {
+func NewGRPCControllter(logger logger.Logger, postService post.PostService) GRPCControllter {
 	return &grpcControllterImpl{
+		logger:      logger,
 		postService: postService,
 	}
 }
@@ -27,7 +30,7 @@ func NewGRPCControllter(postService post.PostService) GRPCControllter {
 func (c *grpcControllterImpl) GetPostById(ctx context.Context, req *v1.GetPostByIdRequest) (*v1.GetPostByIdResponse, error) {
 	post, err := c.postService.GetById(ctx, int(req.Id))
 	if err != nil {
-		return nil, fmt.Errorf("rmq_rpc - controller - v1 - GetPostById: %w", err)
+		return nil, fmt.Errorf("grpc - controller - v1 - GetPostById: %w", err)
 	}
 
 	return &v1.GetPostByIdResponse{

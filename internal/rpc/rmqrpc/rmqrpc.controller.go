@@ -7,6 +7,7 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/internal/dto"
 	post "github.com/1111mp/gin-app/internal/modules/post"
+	"github.com/1111mp/gin-app/pkg/logger"
 )
 
 type RMQRPCControllter interface {
@@ -14,11 +15,15 @@ type RMQRPCControllter interface {
 }
 
 type rmqRPCControllterImpl struct {
+	logger      logger.Logger
 	postService post.PostService
 }
 
-func NewRMQRPCControllter(postService post.PostService) RMQRPCControllter {
-	return &rmqRPCControllterImpl{postService}
+func NewRMQRPCControllter(logger logger.Logger, postService post.PostService) RMQRPCControllter {
+	return &rmqRPCControllterImpl{
+		logger,
+		postService,
+	}
 }
 
 // GetPostById -.
