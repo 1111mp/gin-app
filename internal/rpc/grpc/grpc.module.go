@@ -7,7 +7,7 @@ import (
 	"github.com/1111mp/gin-app/config"
 	v1 "github.com/1111mp/gin-app/docs/proto/v1"
 	grpcclient "github.com/1111mp/gin-app/pkg/grpc/client"
-	"github.com/1111mp/gin-app/pkg/grpcserver"
+	grpcserver "github.com/1111mp/gin-app/pkg/grpc/server"
 	"github.com/1111mp/gin-app/pkg/logger"
 	"go.uber.org/fx"
 	"google.golang.org/grpc/reflection"
