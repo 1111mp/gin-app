@@ -69,6 +69,45 @@ var Module = fx.Module(
 			},
 			fx.ResultTags(`name:"asynq_server"`),
 		),
+		// asynq scheduler
+		// ! Scheduler is not used in this app, but you can easily add it back if you need to run periodic tasks.
+		// ! If the task only needs to run periodically, robfig/cron is a better option.
+		// ! It operates in-memory and avoids external dependencies such as Redis.
+		// fx.Annotate(
+		// 	func(lc fx.Lifecycle, cfg config.Config, logger logger.Logger) (*asynqlib.Scheduler, error) {
+		// 		opt, err := asynqlib.ParseRedisURI(cfg.Redis().URL)
+		// 		if err != nil {
+		// 			logger.Fatal(fmt.Errorf("app - Run - asynq - server.ParseRedisURI: %w", err))
+		// 			return nil, err
+		// 		}
+
+		// 		scheduler := asynqlib.NewScheduler(opt, nil)
+		// 		logger.Infof("app - Run - asynq - scheduler initialized")
+		// 		// Register periodic tasks
+		// 		{
+		// 			// if _, err := scheduler.Register("* * * * *", asynq.NewTask("task1", nil)); err != nil {
+		// 			// 	log.Fatal(err)
+		// 			// }
+		// 		}
+
+		// 		lc.Append(fx.Hook{
+		// 			OnStart: func(ctx context.Context) error {
+		// 				err := scheduler.Start()
+		// 				if err != nil {
+		// 					logger.Fatal(fmt.Errorf("app - Run - asynq - scheduler.Start: %w", err))
+		// 				}
+		// 				return nil
+		// 			},
+		// 			OnStop: func(ctx context.Context) error {
+		// 				scheduler.Shutdown()
+		// 				logger.Infof("app - Run - asynq - scheduler stopped")
+		// 				return nil
+		// 			},
+		// 		})
+
+		// 		return scheduler, nil
+		// 	},
+		// ),
 		// asynq mux
 		fx.Annotate(
 			func(logger logger.Logger, h AsynqMuxHandler) *asynqlib.ServeMux {
