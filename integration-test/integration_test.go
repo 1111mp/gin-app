@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"github.com/1111mp/gin-app/ent"
 	"github.com/1111mp/gin-app/internal/dto"
 	rmqClient "github.com/1111mp/gin-app/pkg/rabbitmq/rmq_rpc/client"
+	"github.com/hibiken/asynq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -34,6 +36,12 @@ const (
 	// HTTP REST
 	basePathV1 = httpURL + "/api/v1"
 	healthPath = basePathV1 + "/healthz"
+
+	// redis
+	// docker-compose service name
+	redisURL = "redis://root:pass@redis:6379/0"
+	// test local server
+	// redisURL = "redis://root:pass@localhost:6379/0"
 
 	// gRPC
 	grpcURL = host + ":8081"
@@ -191,4 +199,42 @@ func TestClientRMQRPCV1(t *testing.T) { //nolint: dupl,gocritic,nolintlint
 			t.Fatalf("Post ID mismatch: expected %d, got %d", req.ID, post.ID)
 		}
 	}
+}
+
+// Asynq Client: Enqueue tasks and check if they are processed successfully.
+func TestClientAsynqTasks(t *testing.T) {
+	type EmailDeliveryPayload struct {
+		UserID     int
+		TemplateID string
+	}
+
+	opt, err := asynq.ParseRedisURI(redisURL)
+	if err != nil {
+		t.Fatal(fmt.Errorf("app - Run - asynq - client.ParseRedisURI: %w", err))
+	}
+
+	client := asynq.NewClient(opt)
+	defer func() {
+		err = client.Close()
+		if err != nil {
+			t.Fatal("Asynq Client - shutdown error - client.Close", err)
+		}
+	}()
+
+	payload, err := json.Marshal(EmailDeliveryPayload{UserID: 42, TemplateID: "some:template:id"})
+	if err != nil {
+		t.Fatal(fmt.Errorf("Failed to marshal email delivery payload: %w", err))
+	}
+
+	task := asynq.NewTask("email:deliver", payload, asynq.MaxRetry(5), asynq.Timeout(10*time.Minute))
+	info, err := client.Enqueue(task)
+	if err != nil {
+		t.Fatal(fmt.Errorf("Failed to enqueue email delivery task: %w", err))
+	}
+
+	if info.ID == "" {
+		t.Fatal("Expected non-empty task ID")
+	}
+
+	log.Printf("Enqueued Asynq task: id=%s, type=%s", info.ID, task.Type())
 }

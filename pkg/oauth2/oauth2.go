@@ -4,7 +4,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
+
+	"github.com/goccy/go-json"
 )
 
 // State -.
