@@ -17,8 +17,8 @@ var Module = fx.Module(
 	"grpc",
 
 	fx.Provide(
-		// grpc controller
-		NewGRPCControllter,
+		// grpc service
+		NewGRPCSvervice,
 		// grpc server
 		fx.Annotate(
 			func(cfg config.Config, logger logger.Logger) *grpcserver.Server {
@@ -40,10 +40,10 @@ var Module = fx.Module(
 		func(
 			cfg config.Config,
 			grpcServer *grpcserver.Server,
-			grpcController GRPCControllter,
+			grpcService GRPCSvervice,
 		) {
 			{
-				v1.RegisterPostServer(grpcServer.App, grpcController)
+				v1.RegisterPostServer(grpcServer.App, grpcService)
 			}
 
 			if cfg.App().Env == "development" {

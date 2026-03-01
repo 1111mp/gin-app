@@ -9,6 +9,7 @@ import (
 	_ "github.com/1111mp/gin-app/docs"
 	"github.com/1111mp/gin-app/internal/middleware"
 	"github.com/1111mp/gin-app/pkg/logger"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	ginzap "github.com/gin-contrib/zap"
@@ -80,8 +81,17 @@ func NewRouter(
 			return fields
 		},
 	}))
+	// sentry
+	app.Use(sentrygin.New(sentrygin.Options{
+		Repanic:         true,
+		WaitForDelivery: false,
+		Timeout:         2 * time.Second,
+	}))
+	// recovery
 	app.Use(ginzap.RecoveryWithZap(logger.Logger(), true))
+	// timeout
 	app.Use(timeout.Timeout(timeout.WithTimeout(6 * time.Second)))
+	// custom error handler
 	app.Use(middleware.ErrorHandler(logger))
 
 	// Swagger

@@ -15,8 +15,8 @@ var Module = fx.Module(
 	"rmqrpc",
 
 	fx.Provide(
-		// rmqrpc controller
-		NewRMQRPCControllter,
+		// rmqrpc router
+		NewRMQRPCRouter,
 		// rabbitmq rpc server
 		func(
 			cfg config.Config,
@@ -63,8 +63,8 @@ var Module = fx.Module(
 	),
 	// register router for rabbitmq
 	fx.Invoke(
-		func(rmqServer *rmqRPCServer.Server, c RMQRPCControllter) {
-			rmqServer.RegisterRouter("v1.get_post_by_id", rmqRPCServer.CallHandlerTyped(c.GetPostById))
+		func(rmqServer *rmqRPCServer.Server, rmqrpcRouter RMQRPCRouter) {
+			rmqServer.RegisterRouter("v1.get_post_by_id", rmqRPCServer.CallHandlerTyped(rmqrpcRouter.GetPostById))
 		},
 	),
 

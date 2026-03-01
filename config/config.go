@@ -18,6 +18,7 @@ type (
 		Redis() Redis
 		GRPC() GRPC
 		RMQ() RMQ
+		Sentry() Sentry
 		Metrics() Metrics
 		Swagger() Swagger
 		Github() Github
@@ -34,6 +35,7 @@ type (
 		RedisData   Redis
 		GRPCData    GRPC
 		RMQData     RMQ
+		SentryData  Sentry
 		MetricsData Metrics
 		SwaggerData Swagger
 		GoogleData  Google
@@ -44,7 +46,7 @@ type (
 	App struct {
 		Name    string `env:"APP_NAME,required"`
 		Version string `env:"APP_VERSION,required"`
-		Env     string `env:"ENV,required"`
+		Env     string `env:"APP_ENV,required"`
 	}
 
 	// HTTP -.
@@ -87,6 +89,11 @@ type (
 		URL            string `env:"RMQ_URL,required"`
 	}
 
+	// Sentry -.
+	Sentry struct {
+		DSN string `env:"SENTRY_DSN,required"`
+	}
+
 	// Metrics -.
 	Metrics struct {
 		Enabled bool `env:"METRICS_ENABLED" envDefault:"true"`
@@ -97,12 +104,14 @@ type (
 		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
 	}
 
+	// Google -.
 	Google struct {
 		ClientID     string `env:"GOOGLE_CLIENT_ID,required"`
 		ClientSecret string `env:"GOOGLE_CLIENT_SECRET,required"`
 		RedirectURL  string `env:"GOOGLE_REDIRECT_URL,required"`
 	}
 
+	// Github -.
 	Github struct {
 		ClientID     string `env:"GITHUB_CLIENT_ID,required"`
 		ClientSecret string `env:"GITHUB_CLIENT_SECRET,required"`
@@ -131,10 +140,10 @@ func (c *configImpl) JWT() JWT         { return c.JWTData }
 func (c *configImpl) Log() Log         { return c.LogData }
 func (c *configImpl) PG() PG           { return c.PGData }
 func (c *configImpl) Redis() Redis     { return c.RedisData }
+func (c *configImpl) GRPC() GRPC       { return c.GRPCData }
+func (c *configImpl) RMQ() RMQ         { return c.RMQData }
+func (c *configImpl) Sentry() Sentry   { return c.SentryData }
 func (c *configImpl) Metrics() Metrics { return c.MetricsData }
 func (c *configImpl) Swagger() Swagger { return c.SwaggerData }
 func (c *configImpl) Google() Google   { return c.GoogleData }
 func (c *configImpl) Github() Github   { return c.GithubData }
-
-func (c *configImpl) GRPC() GRPC { return c.GRPCData }
-func (c *configImpl) RMQ() RMQ   { return c.RMQData }

@@ -10,24 +10,24 @@ import (
 	"github.com/1111mp/gin-app/pkg/logger"
 )
 
-type RMQRPCControllter interface {
+type RMQRPCRouter interface {
 	GetPostById(ctx context.Context, req dto.GetPostByIdRequest) (*ent.PostEntity, error)
 }
 
-type rmqRPCControllterImpl struct {
+type rmqRPCRouterImpl struct {
 	logger      logger.Logger
 	postService post.PostService
 }
 
-func NewRMQRPCControllter(logger logger.Logger, postService post.PostService) RMQRPCControllter {
-	return &rmqRPCControllterImpl{
+func NewRMQRPCRouter(logger logger.Logger, postService post.PostService) RMQRPCRouter {
+	return &rmqRPCRouterImpl{
 		logger,
 		postService,
 	}
 }
 
 // GetPostById -.
-func (c *rmqRPCControllterImpl) GetPostById(
+func (c *rmqRPCRouterImpl) GetPostById(
 	ctx context.Context,
 	req dto.GetPostByIdRequest,
 ) (*ent.PostEntity, error) {
