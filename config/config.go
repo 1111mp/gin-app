@@ -119,6 +119,10 @@ type (
 	}
 )
 
+func (a App) IsDev() bool {
+	return a.Env == "development" || a.Env == "debug" || a.Env == "test"
+}
+
 // NewConfig returns app config.
 func NewConfig() (Config, error) {
 	if err := godotenv.Load(); err != nil {

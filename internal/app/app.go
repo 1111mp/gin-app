@@ -8,11 +8,11 @@ import (
 
 	"github.com/1111mp/gin-app/config"
 	"github.com/1111mp/gin-app/internal/modules"
+	"github.com/1111mp/gin-app/internal/observability"
 	"github.com/1111mp/gin-app/internal/router"
 	api_router "github.com/1111mp/gin-app/internal/router/api"
 	openapi_router "github.com/1111mp/gin-app/internal/router/open-api"
 	"github.com/1111mp/gin-app/internal/rpc"
-	"github.com/1111mp/gin-app/internal/sentry"
 	"github.com/1111mp/gin-app/internal/tasks"
 	"github.com/1111mp/gin-app/pkg/httpserver"
 	"github.com/1111mp/gin-app/pkg/jwt"
@@ -98,7 +98,10 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 				)
 			},
 			// gin
-			router.NewRouter,
+			fx.Annotate(
+				router.NewRouter,
+				fx.ParamTags("", "", `name:"tracing_filter"`),
+			),
 			// api router
 			api_router.NewAPIRouter,
 			// open-api router
@@ -108,14 +111,14 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 				return httpserver.New(handler, httpserver.Port(cfg.HTTP().Port))
 			},
 		),
-		// sentry
-		sentry.Module,
 		// rpc
 		rpc.Module,
 		// tasks
 		tasks.Module,
 		// api
 		modules.APIModule,
+		// observability
+		observability.Module,
 		// start http server
 		fx.Invoke(startHTTPServer),
 	).Run()
