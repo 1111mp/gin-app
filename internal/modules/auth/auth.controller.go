@@ -7,6 +7,8 @@ import (
 	"github.com/1111mp/gin-app/internal/dto"
 	"github.com/1111mp/gin-app/pkg/errors"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type AuthController struct {
@@ -63,9 +65,14 @@ func (a *AuthController) Login(c *gin.Context) {
 // @Router      /api/v1/auth/login-with-account [post]
 func (a *AuthController) LoginWithAccount(c *gin.Context) {
 	ctx := c.Request.Context()
+	span := trace.SpanFromContext(ctx)
 
 	var dto dto.AuthLoginWithAccountDto
 	if err := c.ShouldBindJSON(&dto); err != nil {
+		span.SetAttributes(
+			attribute.Bool("validation.failed", true),
+		)
+
 		c.Error(
 			errors.NewAPIError(
 				http.StatusBadRequest,

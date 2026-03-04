@@ -28,7 +28,8 @@ type Logger interface {
 	Errorf(template string, args ...interface{})
 	Fatalf(template string, args ...interface{})
 
-	Errorw(template string, args ...interface{})
+	Infow(msg string, keysAndValues ...interface{})
+	Errorw(msg string, keysAndValues ...interface{})
 }
 
 // loggerImpl -.
@@ -160,6 +161,11 @@ func (l *loggerImpl) Errorf(template string, args ...interface{}) {
 // Fatalf -.
 func (l *loggerImpl) Fatalf(template string, args ...interface{}) {
 	l.sugar.Fatalf(template, args...)
+}
+
+// Infow -.
+func (l *loggerImpl) Infow(msg string, keysAndValues ...interface{}) {
+	l.sugar.Infow(msg, keysAndValues...)
 }
 
 // Errorw -.

@@ -27,3 +27,5 @@ bin/
 vendor/
 
 coverage.txt
+
+tempo-data/

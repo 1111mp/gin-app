@@ -22,11 +22,12 @@ var Module = fx.Module(
 			func(
 				logger logger.Logger,
 			) *cronlib.Cron {
+				cronLogger := NewCronLogger(logger)
 				cron := cronlib.New(
 					cronlib.WithSeconds(),
 					cronlib.WithChain(
-						cronlib.Recover(cronlib.DefaultLogger),
-						cronlib.SkipIfStillRunning(cronlib.DefaultLogger),
+						cronlib.Recover(cronLogger),
+						cronlib.SkipIfStillRunning(cronLogger),
 					),
 				)
 				logger.Infof("app - Run - cron - initialized")

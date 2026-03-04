@@ -10,6 +10,7 @@ import (
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/1111mp/gin-app/ent"
 	_ "github.com/1111mp/gin-app/ent/runtime"
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 )
@@ -49,6 +50,8 @@ func New(url string, opts ...Option) (*Postgres, error) {
 	}
 
 	poolConfig.MaxConns = int32(pg.maxPoolSize)
+	// ✅ Set up OpenTelemetry tracing for pgx
+	poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
 	for pg.connAttempts > 0 {
 		pool, poolErr := pgxpool.NewWithConfig(context.Background(), poolConfig)
@@ -82,6 +85,11 @@ func New(url string, opts ...Option) (*Postgres, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("postgres - NewPostgres - connAttempts == 0: %w", err)
+	}
+
+	// ✅ Record database stats with OpenTelemetry
+	if err = otelpgx.RecordStats(pg.Pool); err != nil {
+		return nil, fmt.Errorf("postgres - NewPostgres - unable to record database stats: %w", err)
 	}
 
 	// ✅ Initialize Ent client

@@ -12,8 +12,13 @@ import (
 	"github.com/1111mp/gin-app/pkg/oauth2"
 	"github.com/1111mp/gin-app/pkg/oauth2/github"
 	"github.com/1111mp/gin-app/pkg/oauth2/google"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.uber.org/zap"
 )
+
+var srvTracer = otel.Tracer("AuthService")
 
 type AuthService interface {
 	Login(dto dto.AuthLoginDto) (string, error)
@@ -66,12 +71,23 @@ func (a *authServiceImpl) Login(dto dto.AuthLoginDto) (string, error) {
 
 // LoginWithAccount -.
 func (a *authServiceImpl) LoginWithAccount(ctx context.Context, dto dto.AuthLoginWithAccountDto) (string, error) {
+	ctx, span := srvTracer.Start(ctx, "AuthService.LoginWithAccount")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("login.type", "account"),
+	)
+
 	user, err := a.authRepository.GetByEmail(ctx, dto.Email)
 	if err != nil {
+
 		if ent.IsNotFound(err) {
+			span.SetAttributes(attribute.Bool("login.success", false))
 			return "", errors.ErrUnauthorized
 		}
 
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "repository error")
 		return "", errors.WrapAPIError(
 			errors.ErrInternalServerError,
 			errors.NewRepositoryError(
@@ -83,11 +99,15 @@ func (a *authServiceImpl) LoginWithAccount(ctx context.Context, dto dto.AuthLogi
 
 	// compare password
 	if err := user.ComparePassword(dto.Password); err != nil {
+		span.SetAttributes(attribute.Bool("login.success", false))
 		return "", errors.ErrUnauthorized
 	}
 
 	token, err := a.jwt.GenerateToken(user.ID)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "jwt generate failed")
+
 		return "", errors.WrapAPIError(
 			errors.ErrInternalServerError,
 			errors.NewRepositoryError(
@@ -97,6 +117,7 @@ func (a *authServiceImpl) LoginWithAccount(ctx context.Context, dto dto.AuthLogi
 		)
 	}
 
+	span.SetAttributes(attribute.Bool("login.success", true))
 	return token, nil
 }
 

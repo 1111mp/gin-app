@@ -66,15 +66,6 @@ var Module = fx.Module(
 						sdktrace.ParentBased(sdktrace.TraceIDRatioBased(1.0)),
 					),
 				)
-				// set global tracer provider
-				otel.SetTracerProvider(tp)
-				// set global propagator to tracecontext (the default is no-op).
-				otel.SetTextMapPropagator(
-					propagation.NewCompositeTextMapPropagator(
-						propagation.TraceContext{},
-						propagation.Baggage{},
-					),
-				)
 				logger.Infof("app - Run - tracing provider initialized")
 				return tp, nil
 			},
@@ -91,6 +82,19 @@ var Module = fx.Module(
 			) {
 				lc.Append(
 					fx.Hook{
+						OnStart: func(ctx context.Context) error {
+							// set global tracer provider
+							otel.SetTracerProvider(tp)
+							// set global propagator to tracecontext (the default is no-op).
+							otel.SetTextMapPropagator(
+								propagation.NewCompositeTextMapPropagator(
+									propagation.TraceContext{},
+									propagation.Baggage{},
+								),
+							)
+							logger.Infof("app - Run - tracing - set global tracer provider and propagator")
+							return nil
+						},
 						OnStop: func(ctx context.Context) error {
 							logger.Infof("app - Run - tracing - shutting down")
 							err := tp.Shutdown(ctx)
