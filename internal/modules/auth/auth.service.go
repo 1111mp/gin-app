@@ -82,7 +82,9 @@ func (a *authServiceImpl) LoginWithAccount(ctx context.Context, dto dto.AuthLogi
 	if err != nil {
 
 		if ent.IsNotFound(err) {
-			span.SetAttributes(attribute.Bool("login.success", false))
+			span.SetAttributes(
+				attribute.Bool("user.exists", false),
+			)
 			return "", errors.ErrUnauthorized
 		}
 
@@ -99,7 +101,7 @@ func (a *authServiceImpl) LoginWithAccount(ctx context.Context, dto dto.AuthLogi
 
 	// compare password
 	if err := user.ComparePassword(dto.Password); err != nil {
-		span.SetAttributes(attribute.Bool("login.success", false))
+		span.SetAttributes(attribute.Bool("user.exists", false))
 		return "", errors.ErrUnauthorized
 	}
 

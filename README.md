@@ -1,36 +1,31 @@
-# gin-app 🚀
+# gin-app
 
-A production-ready **Gin + Fx** based project template for rapidly building scalable, modular, RESTful web services in Go.
+A production-ready starter template for building modular REST APIs in Go with **Gin** and **Uber Fx**.
 
-This template is designed with:
-
-- 🧱 Modular architecture (Fx DI)
-- 🧠 Clean architecture layering
-- 🔐 JWT authentication
-- 📦 Ent ORM
-- 🐳 Docker & Docker Compose
-- 📑 Swagger API docs
-- 🧪 Testing & mocking
-- 🔁 Database migration
-
----
+It gives you a clean structure and common backend tooling so you can focus on business logic.
 
 ## ✨ Features
 
 - Gin HTTP framework
 - Uber Fx dependency injection
-- PostgreSQL (Ent ORM)
-- Redis
+- Ent ORM + PostgreSQL
+- Redis integration
 - JWT authentication
-- Modular domain structure
-- Swagger documentation
-- Integration testing stack
-- Database migration
-- Linting & formatting
-- Mock generation
-- Dependency vulnerability scanning
+- Swagger (OpenAPI) docs
+- Docker and Docker Compose setup
+- Migration, test, lint, and mock workflows
 
----
+## 🧩 Architecture at a glance
+
+This project follows a modular, interface-first structure:
+
+```txt
+Controller -> Service -> Repository/Provider
+```
+
+- `internal/modules` contains domain modules (auth, user, post, etc.)
+- Modules expose interfaces to keep boundaries clean
+- Fx wires dependencies across modules
 
 ## 📁 Project Structure
 
@@ -39,135 +34,75 @@ cmd/
   app/                 # Application entrypoint
 internal/
   config/              # Configuration
+  app/                 # Composition root; all modules/infrastructure are assembled here with Fx.
   modules/             # Business modules (user, post, auth, ...)
-  router/              # Router layer
+  router/              # Gin engine setup and API grouping (public vs private)
   middleware/          # HTTP middlewares (auth, logging, cors, ...)
   dto/                 # Data Transfer Objects (request/response models)
+  observability/       # Tracing, metrics, sentry modules
+  tasks/               # Async/background work (Asynq, cron).
+  rpc/                 # RabbitMQ RPC + gRPC wiring.
 pkg/
   logger/              # Logger
   postgres/            # PostgreSQL client
   redis/               # Redis client
   jwt/                 # JWT utilities
   oauth2/              # OAuth2 (Github & Google)
+  rabbitmq/            # RabbitMQ RPC server/client
+  grpc/                # gRPC server/client
 ent/
   schema/              # Ent schemas
   migrate/             # Migration files
 ```
 
----
-
-## 🧩 Architecture Design
-
-- **Module-based architecture** (inspired by NestJS)
-- Fx global container with interface-based exports
-- Strong decoupling via interfaces
-- Dependency inversion principle (DIP)
-- Clean boundaries between modules
-
-```txt
-Controller -> Service -> Domain Interface -> Infrastructure
-```
-
----
-
 ## 🛠 Prerequisites
 
-### Docker
+- Go `>= 1.22`
+- Docker + Docker Compose
+- Make
 
-```bash
-brew install docker
-```
+## 🚀 Quick start
 
-### Go
-
-```bash
-go version >= 1.22
-```
-
----
-
-## 🐘 PostgreSQL (Docker)
-
-```bash
-docker run -d --name pg-server \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=password \
-  -e POSTGRES_DB=db_name \
-  -p 5432:5432 \
-  -v pgdata:/var/lib/postgresql \
-  postgres
-```
-
----
-
-## 🧠 Redis (Docker)
-
-```bash
-docker run -d --name redis \
-  -p 6379:6379 \
-  -v redis-data:/data \
-  redis redis-server --requirepass yourpassword --appendonly yes
-```
-
----
-
-## ⚙️ Environment Setup
+1. Create local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
----
-
-## 🚀 Quick Start
-
-```bash
-make run
-```
-
----
-
-## 🐳 Docker Compose
-
-### Start base services
+2. Start required services:
 
 ```bash
 make compose-up
 ```
 
-### Start all services
+3. Run the API:
 
 ```bash
-make compose-up-all
+make run
 ```
 
-### Integration test stack
+## 🐳 Docker commands
 
 ```bash
-make compose-up-integration-test
+make compose-up                  # Start base services
+make compose-up-all              # Start full stack
+make compose-up-integration-test # Start integration test stack
+make compose-down                # Stop and clean services
 ```
 
-### Stop services
+## 📑 API documentation
 
-```bash
-make compose-down
-```
-
----
-
-## 📑 Swagger
+Generate Swagger docs:
 
 ```bash
 make swag-v1
 ```
 
-Access:
+Then open:
 
-```
+```txt
 http://localhost:8080/swagger/index.html
 ```
-
----
 
 ## 🧪 Testing
 
@@ -175,158 +110,26 @@ http://localhost:8080/swagger/index.html
 make test
 ```
 
----
-
-## 🧬 Database
-
-### Create schema
+## 🧬 Database workflow
 
 ```bash
-make schema-create User
+make schema-create User              # Create new Ent schema
+make ent-gen                         # Generate Ent code
+make migrate-create add_user_table   # Create migration
+make migrate-up                      # Apply migration
+make migrate-down                    # Roll back migration
 ```
 
-### Generate ent code
+## 🧰 Development utilities
 
 ```bash
-make ent-gen
+make format            # Go formatting
+make linter-golangci   # Lint checks
+make deps-audit        # Dependency vulnerability checks
+make mock              # Generate mocks
+make pre-commit        # Run local pre-commit checks
 ```
-
-### Create migration
-
-```bash
-make migrate-create add_user_table
-```
-
-### Run migration
-
-```bash
-make migrate-up
-```
-
-### Rollback migration
-
-```bash
-make migrate-down
-```
-
----
-
-## 🧰 Development Tools
-
-### Format code
-
-```bash
-make format
-```
-
-### Lint
-
-```bash
-make linter-golangci
-```
-
-### Dependency audit
-
-```bash
-make deps-audit
-```
-
-### Generate mocks
-
-```bash
-make mock
-```
-
----
-
-## 📦 Dependency Management
-
-```bash
-make deps
-make upgrade-deps
-make ls-deps
-```
-
----
-
-## 🔁 Pre-commit Hook
-
-```bash
-make pre-commit
-```
-
----
-
-## 🧠 Module Design Pattern
-
-Each module follows:
-
-```txt
-module/
-  module.go     # fx.Module definition
-  service.go    # internal implementation
-  repo.go       # repository
-  controller.go # HTTP layer
-```
-
-External modules only depend on interfaces.
-
----
-
-## 🔐 Security
-
-- JWT authentication
-- Middleware-based authorization
-- Environment-based secrets
-- Isolated service layers
-
----
-
-## 🧱 Recommended Extensions
-
-- OpenTelemetry tracing
-- Prometheus metrics
-- gRPC gateway
-- CQRS pattern
-- Event-driven architecture
-- Message queue integration
-
----
 
 ## 📜 License
 
-MIT License
-
----
-
-## 🤝 Contributing
-
-PRs are welcome. Please follow:
-
-- Go formatting standards
-- Modular structure
-- Interface-first design
-- Clean commit history
-
----
-
-## 🧭 Philosophy
-
-> Simple by default, scalable by design.
-
-> Architecture should enable growth, not block it.
-
----
-
-## ⭐ Why gin-app
-
-- Enterprise-ready
-- Clean architecture
-- Strong boundaries
-- Modular design
-- High scalability
-- Production-grade tooling
-
----
-
-Happy coding! 🚀
+MIT
