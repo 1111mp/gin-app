@@ -75,6 +75,7 @@ type (
 	Redis struct {
 		PoolMax int    `env:"REDIS_POOL_MAX"`
 		URL     string `env:"REDIS_URL,required"`
+		Prefix  string `env:"REDIS_PREFIX"`
 	}
 
 	// GRPC -.

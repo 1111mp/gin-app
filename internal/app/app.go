@@ -21,7 +21,10 @@ import (
 	"github.com/1111mp/gin-app/pkg/oauth2/google"
 	"github.com/1111mp/gin-app/pkg/postgres"
 	"github.com/1111mp/gin-app/pkg/redis"
+	"github.com/1111mp/gin-app/pkg/rediskey"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/go-redsync/redsync/v4/redis/goredis/v9"
 	"go.uber.org/fx"
 )
 
@@ -77,6 +80,20 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 					return nil
 				}),
 			),
+			// redsync
+			func(logger logger.Logger, rdb *redis.Redis) (*redsync.Redsync, error) {
+				pool := goredis.NewPool(rdb.Client)
+				rs := redsync.New(pool)
+
+				logger.Info("app - Run - redsync initialized")
+
+				return rs, nil
+			},
+			// rediskey
+			func(cfg config.Config) (rediskey.RedisKey, error) {
+				rdk := rediskey.New(cfg.App().Name, cfg.App().Env)
+				return rdk, nil
+			},
 			// jwt
 			func() jwt.JWT {
 				return jwt.NewJWT(jwt.Issuer(cfg.App().Name), jwt.Secret(cfg.JWT().SECRET))

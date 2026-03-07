@@ -45,7 +45,7 @@ services:
     volumes:
       - ./redpanda-console.yaml:/etc/redpanda/redpanda-console-config.yaml
     ports:
-      - '8080:8080'
+      - '8088:8080'
     depends_on:
       - redpanda
 
@@ -112,3 +112,53 @@ services:
       ]
     depends_on:
       - tempo
+
+  # self-hosted sentry-compatible error tracking
+  sentry-db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=glitchtip
+      - POSTGRES_USER=glitchtip
+      - POSTGRES_PASSWORD=glitchtip
+    volumes:
+      - sentry_db_data:/var/lib/postgresql/data
+
+  sentry-redis:
+    image: redis:8.4-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - sentry_redis_data:/data
+
+  sentry:
+    image: glitchtip/glitchtip:latest
+    depends_on:
+      - sentry-db
+      - sentry-redis
+    environment:
+      - DATABASE_URL=postgres://glitchtip:glitchtip@sentry-db:5432/glitchtip
+      - REDIS_URL=redis://sentry-redis:6379/1
+      - SECRET_KEY=change-me-for-production
+      - PORT=8000
+      - GLITCHTIP_DOMAIN=http://localhost:8001
+      - DEFAULT_FROM_EMAIL=glitchtip@example.com
+      - ENABLE_OPEN_USER_REGISTRATION=true
+    command: ./bin/run-migrate && ./bin/start-web
+    ports:
+      - '8001:8000'
+
+  sentry-worker:
+    image: glitchtip/glitchtip:latest
+    depends_on:
+      - sentry
+    environment:
+      - DATABASE_URL=postgres://glitchtip:glitchtip@sentry-db:5432/glitchtip
+      - REDIS_URL=redis://sentry-redis:6379/1
+      - SECRET_KEY=change-me-for-production
+      - PORT=8000
+      - GLITCHTIP_DOMAIN=http://localhost:8001
+      - DEFAULT_FROM_EMAIL=glitchtip@example.com
+    command: ./bin/start-worker
+
+volumes:
+  sentry_db_data:
+  sentry_redis_data:

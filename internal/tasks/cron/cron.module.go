@@ -15,7 +15,7 @@ var Module = fx.Module(
 		// cron jobs
 		fx.Annotate(
 			NewCronJobs,
-			fx.ResultTags(`name:"cron_jobs"`),
+			fx.ResultTags(`group:"cron_jobs"`),
 		),
 		// corn
 		fx.Annotate(
@@ -42,17 +42,16 @@ var Module = fx.Module(
 			func(
 				logger logger.Logger,
 				cron *cronlib.Cron,
-				cronJobs CronsJob,
+				jobs []CronJob,
 			) {
-				// register cron jobs here
-				{
+				for _, job := range jobs {
 					// schedule a cron job to run every minute
-					cron.AddFunc("0 * * * * *", cronJobs.Run)
+					cron.AddJob(job.Spec(), job)
 				}
 
 				logger.Infof("app - Run - cron - jobs registered")
 			},
-			fx.ParamTags("", `name:"cron"`, `name:"cron_jobs"`),
+			fx.ParamTags("", `name:"cron"`, `group:"cron_jobs"`),
 		),
 	),
 
@@ -72,9 +71,15 @@ var Module = fx.Module(
 							return nil
 						},
 						OnStop: func(ctx context.Context) error {
-							ctx = cron.Stop()
-							<-ctx.Done()
-							logger.Infof("app - Run - cron - stopped")
+							stopCtx := cron.Stop()
+
+							select {
+							case <-stopCtx.Done():
+								logger.Infof("app - Run - cron - stopped")
+							case <-ctx.Done():
+								logger.Warnf("app - Run - cron - stop timeout")
+							}
+
 							return nil
 						},
 					},

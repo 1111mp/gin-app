@@ -148,8 +148,19 @@ var Module = fx.Module(
 							return nil
 						},
 						OnStop: func(ctx context.Context) error {
-							server.Shutdown()
-							logger.Info("app - Run - asynq - server stopped")
+							done := make(chan struct{})
+							go func() {
+								server.Shutdown()
+								close(done)
+							}()
+
+							select {
+							case <-done:
+								logger.Info("app - Run - asynq - server stopped")
+							case <-ctx.Done():
+								logger.Warn("app - Run - asynq - server shutdown timeout")
+							}
+
 							return nil
 						},
 					},

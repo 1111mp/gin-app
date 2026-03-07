@@ -2,8 +2,10 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	goredis "github.com/redis/go-redis/v9"
 )
 
@@ -41,6 +43,11 @@ func New(url string, opts ...Option) (*Redis, error) {
 	// Ping to verify connection
 	if err := rdb.Client.Ping(context.Background()).Err(); err != nil {
 		return nil, fmt.Errorf("redis - NewRedis - rdb.Client.Ping: %w", err)
+	}
+
+	// OpenTelemetry instrumentation
+	if err := errors.Join(redisotel.InstrumentTracing(rdb.Client), redisotel.InstrumentMetrics(rdb.Client)); err != nil {
+		return nil, fmt.Errorf("redis - NewRedis - redisotel.Instrumentation: %w", err)
 	}
 
 	return rdb, nil

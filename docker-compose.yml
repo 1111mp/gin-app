@@ -1,12 +1,9 @@
 version: '3.9'
 
 x-db-environment: &x-db-environment
-  POSTGRES_SSL_MODE: 'disable'
-  POSTGRES_HOST: 'db'
-  POSTGRES_PORT: '5432'
-  POSTGRES_DB: 'yourdatabase'
-  POSTGRES_PASSWORD: 'yourpassword'
-  POSTGRES_USER: 'postgres'
+  POSTGRES_DB: 'db'
+  POSTGRES_PASSWORD: 'apppassword'
+  POSTGRES_USER: 'user'
 
 x-redis-environment: &x-redis-environment
   REDIS_PASSWORD: 'yourpassword'
@@ -20,14 +17,21 @@ x-backend-app-environment: &x-backend-app-environment
   # App
   APP_NAME: 'gin-app'
   APP_VERSION: '1.0.0'
+  APP_ENV: 'development'
   # HTTP settings
   HTTP_PORT: '8080'
   HTTP_USE_PREFORK_MODE: 'false'
+  HTTP_COOKIE_NAME: 'app_cookie_name'
+  # JWT
+  JWT_SECRET: 'jwt_secret'
   # Logger
+  LOG_DIR: '/tmp/logs'
   LOG_LEVEL: 'debug'
   # PG
   PG_POOL_MAX: '2'
-  PG_URL: 'postgres://user:myAwEsOm3pa55@w0rd@db:5432/db'
+  PG_URL: 'postgres://user:apppassword@db:5432/db?sslmode=disable'
+  # Redis
+  REDIS_URL: 'redis://:yourpassword@redis:6379/0'
   # gRPC
   GRPC_PORT: '8081'
   # RMQ
@@ -37,10 +41,20 @@ x-backend-app-environment: &x-backend-app-environment
   # NATS
   NATS_RPC_SERVER: 'rpc_server'
   NATS_URL: 'nats://guest:guest@nats:4222/'
+  # Sentry
+  SENTRY_DSN: 'https://public@example.com/1'
   # Metrics
   METRICS_ENABLED: 'true'
   # Swagger
   SWAGGER_ENABLED: 'true'
+  # Google OAuth2
+  GOOGLE_CLIENT_ID: 'google_client_id'
+  GOOGLE_CLIENT_SECRET: 'google_client_secret'
+  GOOGLE_REDIRECT_URL: 'http://localhost:8080/api/v1/auth/google/callback'
+  # Github OAuth2
+  GITHUB_CLIENT_ID: 'github_client_id'
+  GITHUB_CLIENT_SECRET: 'github_client_secret'
+  GITHUB_REDIRECT_URL: 'http://localhost:8080/api/v1/auth/github/callback'
 
 services:
   db:
@@ -49,7 +63,7 @@ services:
     environment:
       <<: *x-db-environment
     volumes:
-      - db_data:/var/lib/postgresql
+      - db_data:/var/lib/postgresql/data
     ports:
       - '5432:5432'
     networks:
@@ -70,7 +84,7 @@ services:
         '--appendonly',
         'yes',
         '--requirepass',
-        '${REDIS_PASSWORD}',
+        '$$REDIS_PASSWORD',
       ]
     ports:
       - '6379:6379'
