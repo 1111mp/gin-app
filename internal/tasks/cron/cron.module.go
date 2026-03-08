@@ -14,7 +14,7 @@ var Module = fx.Module(
 	fx.Provide(
 		// cron jobs
 		fx.Annotate(
-			NewCronJobs,
+			NewExampleCronJob,
 			fx.ResultTags(`group:"cron_jobs"`),
 		),
 		// corn

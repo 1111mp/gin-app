@@ -9,27 +9,34 @@ import (
 	"github.com/go-redsync/redsync/v4"
 )
 
-type cronJobImpl struct {
-	*baseCronJobImpl
-
-	spec string
+type exampleJobImpl struct {
+	logger logger.Logger
 }
 
-func NewCronJobs(logger logger.Logger, rs *redsync.Redsync, rdk rediskey.RedisKey) CronJob {
-	job := &cronJobImpl{
-		// schedule a cron job to run every minute
-		spec: "0 * * * * *",
+func NewExampleCronJob(
+	logger logger.Logger,
+	rs *redsync.Redsync,
+	rdk rediskey.RedisKey,
+) CronJob {
+	return NewBaseCronJob(
+		logger,
+		rs,
+		rdk,
+		&exampleJobImpl{
+			logger: logger,
+		},
+	)
+}
+
+func (j *exampleJobImpl) CronConfig() CronConfig {
+	return CronConfig{
+		Name:   "example_job",
+		Spec:   "0 * * * * *", // schedule a cron job to run every minute
+		Expiry: 60 * time.Second,
 	}
-	base := NewBaseCronJob(logger, rs, rdk.Key("cron", "example_job"), 30*time.Second, job)
-	job.baseCronJobImpl = base
-	return job
 }
 
-func (j *cronJobImpl) Do(ctx context.Context) {
+func (j *exampleJobImpl) Do(ctx context.Context) {
 	j.logger.Infof("cron job running")
 	time.Sleep(20 * time.Second)
-}
-
-func (j *cronJobImpl) Spec() string {
-	return j.spec
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/1111mp/gin-app/pkg/logger"
+	"github.com/1111mp/gin-app/pkg/rediskey"
 	"github.com/go-redsync/redsync/v4"
 	"go.opentelemetry.io/otel"
 )
@@ -16,8 +17,15 @@ type CronJob interface {
 	Spec() string
 }
 
-type BaseCronJob interface {
+type CronConfig struct {
+	Name   string
+	Spec   string
+	Expiry time.Duration
+}
+
+type baseCronJob interface {
 	Do(ctx context.Context)
+	CronConfig() CronConfig
 }
 
 type baseCronJobImpl struct {
@@ -25,24 +33,26 @@ type baseCronJobImpl struct {
 	rs     *redsync.Redsync
 
 	key    string
+	spec   string
 	expiry time.Duration
-
-	self BaseCronJob
+	job    baseCronJob
 }
 
 func NewBaseCronJob(
 	logger logger.Logger,
 	rs *redsync.Redsync,
-	key string,
-	expiry time.Duration,
-	job BaseCronJob,
-) *baseCronJobImpl {
+	rdk rediskey.RedisKey,
+	job baseCronJob,
+) CronJob {
+	cfg := job.CronConfig()
+
 	return &baseCronJobImpl{
 		logger: logger,
 		rs:     rs,
-		key:    key,
-		expiry: expiry,
-		self:   job,
+		key:    rdk.Key("cron", cfg.Name),
+		spec:   cfg.Spec,
+		expiry: cfg.Expiry,
+		job:    job,
 	}
 }
 
@@ -53,7 +63,7 @@ func (b *baseCronJobImpl) Run() {
 	mutex := b.rs.NewMutex(
 		b.key,
 		redsync.WithExpiry(b.expiry),
-		redsync.WithTries(1),
+		redsync.WithTries(12),
 	)
 
 	if err := mutex.LockContext(ctx); err != nil {
@@ -70,9 +80,13 @@ func (b *baseCronJobImpl) Run() {
 
 	b.logger.Infof("cron job %s started", b.key)
 
-	if b.self != nil {
-		b.self.Do(ctx)
+	if b.job != nil {
+		b.job.Do(ctx)
 	}
 
 	b.logger.Infof("cron job %s completed", b.key)
+}
+
+func (b *baseCronJobImpl) Spec() string {
+	return b.spec
 }
