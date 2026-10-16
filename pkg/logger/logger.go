@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"io"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,14 +34,15 @@ type Logger interface {
 
 // loggerImpl -.
 type loggerImpl struct {
-	logger *zap.Logger
-	sugar  *zap.SugaredLogger
+	logger  *zap.Logger
+	sugar   *zap.SugaredLogger
+	writers []*timberjack.Logger
 }
 
 var _ Logger = (*loggerImpl)(nil)
 
 // New -.
-func New(dir string, level string) Logger {
+func New(dir, level string) Logger {
 	var l zapcore.Level
 
 	switch strings.ToLower(level) {
@@ -57,7 +58,10 @@ func New(dir string, level string) Logger {
 		l = zap.InfoLevel
 	}
 
-	var core zapcore.Core
+	var (
+		core    zapcore.Core
+		writers []*timberjack.Logger
+	)
 
 	// console
 	consoleCfg := zap.NewDevelopmentEncoderConfig()
@@ -80,6 +84,7 @@ func New(dir string, level string) Logger {
 		cores = append(cores, appCore)
 
 		errLogWriter := getLogWriter(filepath.Join(dir, "app-error.log"))
+		writers = append(writers, appLogWriter, errLogWriter)
 		errCore := zapcore.NewCore(fileEncoder, zapcore.AddSync(errLogWriter), zap.ErrorLevel)
 		cores = append(cores, errCore)
 	}
@@ -88,12 +93,13 @@ func New(dir string, level string) Logger {
 	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	return &loggerImpl{
-		logger: logger,
-		sugar:  logger.Sugar(),
+		logger:  logger,
+		sugar:   logger.Sugar(),
+		writers: writers,
 	}
 }
 
-func getLogWriter(filename string) io.Writer {
+func getLogWriter(filename string) *timberjack.Logger {
 	return &timberjack.Logger{
 		Filename:           filename,
 		MaxSize:            200, // MB
@@ -171,4 +177,19 @@ func (l *loggerImpl) Infow(msg string, keysAndValues ...interface{}) {
 // Errorw -.
 func (l *loggerImpl) Errorw(msg string, keysAndValues ...interface{}) {
 	l.sugar.Errorw(msg, keysAndValues...)
+}
+
+// Close flushes and releases owned file writers. Stdout remains owned by the process.
+func Close(l Logger) error {
+	impl, ok := l.(*loggerImpl)
+	if !ok {
+		return nil
+	}
+
+	var errs []error
+	for _, writer := range impl.writers {
+		errs = append(errs, writer.Sync(), writer.Close())
+	}
+
+	return errors.Join(errs...)
 }

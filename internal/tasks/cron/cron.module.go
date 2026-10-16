@@ -2,11 +2,14 @@ package cron
 
 import (
 	"context"
+	"time"
 
 	"github.com/1111mp/gin-app/pkg/logger"
 	cronlib "github.com/robfig/cron/v3"
 	"go.uber.org/fx"
 )
+
+const cronStopTimeout = 25 * time.Second
 
 var Module = fx.Module(
 	"schedule",
@@ -59,9 +62,9 @@ var Module = fx.Module(
 		fx.Annotate(
 			func(
 				lc fx.Lifecycle,
-				sd fx.Shutdowner,
 				logger logger.Logger,
 				cron *cronlib.Cron,
+				jobs []CronJob,
 			) {
 				lc.Append(
 					fx.Hook{
@@ -71,13 +74,31 @@ var Module = fx.Module(
 							return nil
 						},
 						OnStop: func(ctx context.Context) error {
+							ctx, cancel := context.WithTimeout(ctx, cronStopTimeout)
+							defer cancel()
+							defer func() {
+								for _, job := range jobs {
+									job.Cancel()
+								}
+							}()
 							stopCtx := cron.Stop()
 
 							select {
 							case <-stopCtx.Done():
 								logger.Infof("app - Run - cron - stopped")
 							case <-ctx.Done():
+								for _, job := range jobs {
+									job.Cancel()
+								}
+								timer := time.NewTimer(time.Second)
+								defer timer.Stop()
+								select {
+								case <-stopCtx.Done():
+								case <-timer.C:
+								}
 								logger.Warnf("app - Run - cron - stop timeout")
+
+								return ctx.Err()
 							}
 
 							return nil
@@ -85,7 +106,7 @@ var Module = fx.Module(
 					},
 				)
 			},
-			fx.ParamTags("", "", "", `name:"cron"`),
+			fx.ParamTags("", "", `name:"cron"`, `group:"cron_jobs"`),
 		),
 	),
 )

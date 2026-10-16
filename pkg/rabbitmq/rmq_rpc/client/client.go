@@ -41,8 +41,12 @@ type pendingCall struct {
 
 // Client -.
 type Client struct {
-	ctx context.Context
-	eg  *errgroup.Group
+	ctx             context.Context
+	eg              *errgroup.Group
+	cancel          context.CancelFunc
+	reconnectCtx    context.Context
+	reconnectCancel context.CancelFunc
+	stopOnce        sync.Once
 
 	conn           *rmqrpc.Connection
 	serverExchange string
@@ -57,7 +61,10 @@ type Client struct {
 
 // New -.
 func New(url, serverExchange, clientExchange string, opts ...Option) (*Client, error) {
-	group, ctx := errgroup.WithContext(context.Background())
+	baseCtx, cancel := context.WithCancel(context.Background())
+	group, ctx := errgroup.WithContext(baseCtx)
+	reconnectCtx, reconnectCancel := context.WithCancel(context.Background())
+
 	group.SetLimit(1) // Run only one goroutine
 
 	cfg := rmqrpc.Config{
@@ -67,14 +74,17 @@ func New(url, serverExchange, clientExchange string, opts ...Option) (*Client, e
 	}
 
 	c := &Client{
-		ctx:            ctx,
-		eg:             group,
-		conn:           rmqrpc.New(clientExchange, cfg),
-		serverExchange: serverExchange,
-		notify:         make(chan error),
-		stop:           make(chan struct{}),
-		calls:          make(map[string]*pendingCall),
-		timeout:        _defaultTimeout,
+		ctx:             ctx,
+		cancel:          cancel,
+		reconnectCtx:    reconnectCtx,
+		reconnectCancel: reconnectCancel,
+		eg:              group,
+		conn:            rmqrpc.New(clientExchange, cfg),
+		serverExchange:  serverExchange,
+		notify:          make(chan error, 1),
+		stop:            make(chan struct{}),
+		calls:           make(map[string]*pendingCall),
+		timeout:         _defaultTimeout,
 	}
 
 	// Custom options
@@ -82,8 +92,11 @@ func New(url, serverExchange, clientExchange string, opts ...Option) (*Client, e
 		opt(c)
 	}
 
-	err := c.conn.AttemptConnect()
+	err := c.conn.AttemptConnectContext(c.reconnectCtx)
 	if err != nil {
+		cancel()
+		reconnectCancel()
+
 		return nil, fmt.Errorf("rmq_rpc client - NewClient - c.conn.AttemptConnect: %w", err)
 	}
 
@@ -93,25 +106,28 @@ func New(url, serverExchange, clientExchange string, opts ...Option) (*Client, e
 }
 
 // Shutdown -.
-func (c *Client) Shutdown() error {
-	var shutdownErrors []error
+func (c *Client) Shutdown(ctx context.Context) error {
+	c.stopOnce.Do(func() { close(c.stop); c.reconnectCancel() })
 
-	close(c.stop)
+	done := make(chan error, 1)
 
-	// Wait for all goroutines to finish and get any error
-	err := c.eg.Wait()
-	if err != nil && !errors.Is(err, context.Canceled) {
-		shutdownErrors = append(shutdownErrors, err)
+	go func() { done <- c.eg.Wait() }()
+
+	var err error
+	select {
+	case err = <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
 	}
 
-	// Close connection
+	c.cancel()
 
-	err = c.conn.Connection.Close()
-	if err != nil {
-		shutdownErrors = append(shutdownErrors, err)
+	closeErr := c.conn.Close(ctx)
+	if errors.Is(err, context.Canceled) && ctx.Err() == nil {
+		err = nil
 	}
 
-	return errors.Join(shutdownErrors...)
+	return errors.Join(err, closeErr)
 }
 
 // RemoteCall -.
@@ -159,7 +175,11 @@ func (c *Client) preRemoteCallWait() error {
 	select {
 	case <-c.ctx.Done():
 		return c.ctx.Err()
-	case err := <-c.notify:
+	case err, ok := <-c.notify:
+		if !ok {
+			return ErrConnectionClosed
+		}
+
 		return fmt.Errorf("rmq_rpc client - Client - RemoteCall - c.notify: %w", err)
 	case <-c.stop:
 		return ErrConnectionClosed
@@ -176,7 +196,11 @@ func (c *Client) remoteCallWait(call *pendingCall) error {
 	select {
 	case <-c.ctx.Done():
 		return c.ctx.Err()
-	case err := <-c.notify:
+	case err, ok := <-c.notify:
+		if !ok {
+			return ErrConnectionClosed
+		}
+
 		return fmt.Errorf("rmq_rpc client - Client - RemoteCall - c.notify: %w", err)
 	case <-c.stop:
 		return ErrConnectionClosed
@@ -190,11 +214,17 @@ func (c *Client) remoteCallWait(call *pendingCall) error {
 
 func (c *Client) start() {
 	c.eg.Go(func() error {
+		defer close(c.notify)
+
 		err := c.handleMessages()
 		if err != nil {
-			c.notify <- err
+			select {
+			case <-c.stop:
+				return nil
+			default:
+			}
 
-			close(c.notify)
+			c.notify <- err
 
 			return err
 		}
@@ -206,11 +236,17 @@ func (c *Client) start() {
 func (c *Client) handleMessages() error {
 	for {
 		select {
+		case <-c.stop:
+			return nil
+		default:
+		}
+
+		select {
 		case <-c.ctx.Done():
 			return c.ctx.Err()
 		case <-c.stop:
 			return nil
-		case d, opened := <-c.conn.Delivery:
+		case d, opened := <-c.conn.Messages():
 			if !opened {
 				err := c.reconnect()
 				if err != nil {
@@ -226,7 +262,7 @@ func (c *Client) handleMessages() error {
 }
 
 func (c *Client) reconnect() error {
-	return c.conn.AttemptConnect()
+	return c.conn.AttemptConnectContext(c.reconnectCtx)
 }
 
 func (c *Client) serveCall(d *amqp.Delivery) {
@@ -282,7 +318,7 @@ func (c *Client) publish(corrID, handler string, request any) error {
 		}
 	}
 
-	err = c.conn.Channel.Publish(
+	err = c.conn.Publisher().Publish(
 		c.serverExchange,
 		"",
 		false,

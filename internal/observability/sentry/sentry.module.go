@@ -2,12 +2,15 @@ package sentry
 
 import (
 	"context"
+	"time"
 
 	"github.com/1111mp/gin-app/config"
 	"github.com/1111mp/gin-app/pkg/logger"
 	"github.com/getsentry/sentry-go"
 	"go.uber.org/fx"
 )
+
+const sentryStopTimeout = 3 * time.Second
 
 var Module = fx.Module(
 	"sentry",
@@ -46,13 +49,18 @@ var Module = fx.Module(
 						return nil
 					},
 					OnStop: func(ctx context.Context) error {
+						ctx, cancel := context.WithTimeout(ctx, sentryStopTimeout)
+						defer cancel()
 						logger.Infof("app - Run - sentry shutting down")
 						// use context-aware flush
 						ok := sentry.FlushWithContext(ctx)
 						if !ok {
 							logger.Warnf("app - Run - sentry flush timeout")
+
+							return ctx.Err()
 						}
 						logger.Infof("app - Run - sentry shutdown complete")
+
 						return nil
 					},
 				},

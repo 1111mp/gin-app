@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/1111mp/gin-app/config"
 	v1 "github.com/1111mp/gin-app/docs/proto/v1"
@@ -12,6 +13,8 @@ import (
 	"go.uber.org/fx"
 	"google.golang.org/grpc/reflection"
 )
+
+const grpcStopTimeout = 5 * time.Second
 
 var Module = fx.Module(
 	"grpc",
@@ -65,19 +68,10 @@ var Module = fx.Module(
 						grpcServer.Start()
 
 						go func() {
-							for {
-								select {
-								case <-ctx.Done():
-									return
-								case err, ok := <-grpcServer.Notify():
-									if !ok {
-										return
-									}
-
-									logger.Error(fmt.Errorf("app - Run - grpcServer.Notify: %w", err))
-									// ! It's better to just shut down the app and let Kubernetes restart it.
-									_ = sd.Shutdown()
-									return
+							if err, ok := <-grpcServer.Notify(); ok {
+								logger.Error(fmt.Errorf("app - Run - grpcServer.Notify: %w", err))
+								if err := sd.Shutdown(fx.ExitCode(1)); err != nil {
+									logger.Error(err)
 								}
 							}
 						}()
@@ -85,7 +79,9 @@ var Module = fx.Module(
 						return nil
 					},
 					OnStop: func(ctx context.Context) error {
-						err := grpcServer.Shutdown()
+						ctx, cancel := context.WithTimeout(ctx, grpcStopTimeout)
+						defer cancel()
+						err := grpcServer.Shutdown(ctx)
 						if err != nil {
 							logger.Error(fmt.Errorf("app - Run - grpcServer.Shutdown: %w", err))
 							return err

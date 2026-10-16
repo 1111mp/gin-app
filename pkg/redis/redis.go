@@ -54,8 +54,10 @@ func New(url string, opts ...Option) (*Redis, error) {
 }
 
 // Close -.
-func (rdb *Redis) Close() {
+func (rdb *Redis) Close() error {
 	if rdb.Client != nil {
-		rdb.Client.Close()
+		return rdb.Client.Close()
 	}
+
+	return nil
 }

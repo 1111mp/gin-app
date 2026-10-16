@@ -10,11 +10,14 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+const cronUnlockTimeout = 500 * time.Millisecond
+
 var tracer = otel.Tracer("cron")
 
 type CronJob interface {
 	Run()
 	Spec() string
+	Cancel()
 }
 
 type CronConfig struct {
@@ -29,6 +32,8 @@ type baseCronJob interface {
 }
 
 type baseCronJobImpl struct {
+	ctx    context.Context
+	cancel context.CancelFunc
 	logger logger.Logger
 	rs     *redsync.Redsync
 
@@ -45,9 +50,12 @@ func NewBaseCronJob(
 	job baseCronJob,
 ) CronJob {
 	cfg := job.CronConfig()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	return &baseCronJobImpl{
 		logger: logger,
+		ctx:    ctx,
+		cancel: cancel,
 		rs:     rs,
 		key:    rdk.Key("cron", cfg.Name),
 		spec:   cfg.Spec,
@@ -57,7 +65,7 @@ func NewBaseCronJob(
 }
 
 func (b *baseCronJobImpl) Run() {
-	ctx, span := tracer.Start(context.Background(), b.key)
+	ctx, span := tracer.Start(b.ctx, b.key)
 	defer span.End()
 
 	mutex := b.rs.NewMutex(
@@ -72,7 +80,10 @@ func (b *baseCronJobImpl) Run() {
 	}
 
 	defer func() {
-		_, err := mutex.UnlockContext(ctx)
+		unlockCtx, cancel := context.WithTimeout(context.Background(), cronUnlockTimeout)
+		defer cancel()
+
+		_, err := mutex.UnlockContext(unlockCtx)
 		if err != nil {
 			b.logger.Errorf("cron job %s unlock failed: %v", b.key, err)
 		}
@@ -90,3 +101,5 @@ func (b *baseCronJobImpl) Run() {
 func (b *baseCronJobImpl) Spec() string {
 	return b.spec
 }
+
+func (b *baseCronJobImpl) Cancel() { b.cancel() }

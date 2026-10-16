@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -126,7 +128,7 @@ func (a App) IsDev() bool {
 
 // NewConfig returns app config.
 func NewConfig() (Config, error) {
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("config error: %w", err)
 	}
 

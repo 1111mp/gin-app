@@ -107,8 +107,15 @@ func NewEntClient(pool *pgxpool.Pool) *ent.Client {
 }
 
 // Close -.
-func (p *Postgres) Close() {
+func (p *Postgres) Close() error {
+	var err error
+	if p.Client != nil {
+		err = p.Client.Close()
+	}
+
 	if p.Pool != nil {
 		p.Pool.Close()
 	}
+
+	return err
 }

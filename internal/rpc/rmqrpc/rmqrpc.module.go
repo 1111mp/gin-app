@@ -3,12 +3,18 @@ package rmqrpc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/1111mp/gin-app/config"
 	"github.com/1111mp/gin-app/pkg/logger"
 	rmqRPCClient "github.com/1111mp/gin-app/pkg/rabbitmq/rmq_rpc/client"
 	rmqRPCServer "github.com/1111mp/gin-app/pkg/rabbitmq/rmq_rpc/server"
 	"go.uber.org/fx"
+)
+
+const (
+	serverStopTimeout = 5 * time.Second
+	clientStopTimeout = 3 * time.Second
 )
 
 var Module = fx.Module(
@@ -47,10 +53,12 @@ var Module = fx.Module(
 				logger.Info("app - Run - rmqClient - initialized")
 				return rmqClient, nil
 			},
-			fx.OnStop(func(logger logger.Logger, rmqClient *rmqRPCClient.Client) error {
+			fx.OnStop(func(ctx context.Context, logger logger.Logger, rmqClient *rmqRPCClient.Client) error {
 				logger.Info("app - Run - rmqClient - shutting down")
 
-				err := rmqClient.Shutdown()
+				ctx, cancel := context.WithTimeout(ctx, clientStopTimeout)
+				defer cancel()
+				err := rmqClient.Shutdown(ctx)
 				if err != nil {
 					logger.Error(fmt.Errorf("app - Run - rmqClient - client.Shutdown: %w", err))
 					return err
@@ -80,19 +88,10 @@ var Module = fx.Module(
 					rmqServer.Start()
 
 					go func() {
-						for {
-							select {
-							case <-ctx.Done():
-								return
-							case err, ok := <-rmqServer.Notify():
-								if !ok {
-									return
-								}
-
-								logger.Error(fmt.Errorf("app - Run - rmqServer.Notify: %w", err))
-								// ! It's better to just shut down the app and let Kubernetes restart it.
-								_ = sd.Shutdown()
-								return
+						if err, ok := <-rmqServer.Notify(); ok {
+							logger.Error(fmt.Errorf("app - Run - rmqServer.Notify: %w", err))
+							if err := sd.Shutdown(fx.ExitCode(1)); err != nil {
+								logger.Error(err)
 							}
 						}
 					}()
@@ -100,7 +99,9 @@ var Module = fx.Module(
 					return nil
 				},
 				OnStop: func(ctx context.Context) error {
-					if err := rmqServer.Shutdown(); err != nil {
+					ctx, cancel := context.WithTimeout(ctx, serverStopTimeout)
+					defer cancel()
+					if err := rmqServer.Shutdown(ctx); err != nil {
 						logger.Error(fmt.Errorf("app - Run - rmqServer.Shutdown: %w", err))
 						return err
 					}

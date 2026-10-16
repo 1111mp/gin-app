@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"time"
 
 	"github.com/1111mp/gin-app/pkg/logger"
 	"golang.org/x/sync/errgroup"
@@ -12,7 +13,8 @@ import (
 )
 
 const (
-	_defaultAddr = ":80"
+	_defaultAddr   = ":80"
+	forceStopGrace = 500 * time.Millisecond
 )
 
 // Server -.
@@ -52,22 +54,20 @@ func New(l logger.Logger, opts ...Option) *Server {
 // Start -.
 func (s *Server) Start() {
 	s.eg.Go(func() error {
+		defer close(s.notify)
+
 		var lc net.ListenConfig
 
 		ln, err := lc.Listen(s.ctx, "tcp", s.address)
-		if err != nil {
+		if err != nil && !errors.Is(err, pbgrpc.ErrServerStopped) {
 			s.notify <- err
-
-			close(s.notify)
 
 			return err
 		}
 
 		err = s.App.Serve(ln)
-		if err != nil {
+		if err != nil && !errors.Is(err, pbgrpc.ErrServerStopped) {
 			s.notify <- err
-
-			close(s.notify)
 
 			return err
 		}
@@ -84,20 +84,34 @@ func (s *Server) Notify() <-chan error {
 }
 
 // Shutdown -.
-func (s *Server) Shutdown() error {
-	var shutdownErrors []error
+func (s *Server) Shutdown(ctx context.Context) error {
+	done := make(chan error, 1)
 
-	s.App.GracefulStop() // Attention! Close connection first
+	go func() {
+		s.App.GracefulStop()
 
-	// Wait for all goroutines to finish and get any error
-	err := s.eg.Wait()
-	if err != nil && !errors.Is(err, context.Canceled) {
-		s.logger.Error(err, "grpc server - Server - Shutdown - s.eg.Wait")
+		done <- s.eg.Wait()
+	}()
 
-		shutdownErrors = append(shutdownErrors, err)
+	select {
+	case err := <-done:
+		if errors.Is(err, context.Canceled) {
+			return nil
+		}
+
+		return err
+	case <-ctx.Done():
+		// Stop can also wait behind GracefulStop when a handler ignores cancellation.
+		go s.App.Stop()
+
+		timer := time.NewTimer(forceStopGrace)
+		defer timer.Stop()
+
+		select {
+		case <-done:
+		case <-timer.C:
+		}
+
+		return ctx.Err()
 	}
-
-	s.logger.Info("grpc server - Server - Shutdown")
-
-	return errors.Join(shutdownErrors...)
 }

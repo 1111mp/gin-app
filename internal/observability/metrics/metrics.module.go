@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"time"
 
 	"github.com/1111mp/gin-app/pkg/logger"
 	"go.opentelemetry.io/otel"
@@ -9,6 +10,8 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.uber.org/fx"
 )
+
+const metricsStopTimeout = 3 * time.Second
 
 var Module = fx.Module(
 	"metrics",
@@ -40,9 +43,16 @@ var Module = fx.Module(
 			) {
 				lc.Append(
 					fx.Hook{
-						OnStart: func(ctx context.Context) error {
+						OnStop: func(ctx context.Context) error {
+							ctx, cancel := context.WithTimeout(ctx, metricsStopTimeout)
+							defer cancel()
+
+							return mp.Shutdown(ctx)
+						},
+						OnStart: func(_ context.Context) error {
 							otel.SetMeterProvider(mp)
 							logger.Infof("app - Run - metrics - set global meter provider")
+
 							return nil
 						},
 					},

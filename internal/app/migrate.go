@@ -5,6 +5,7 @@ package app
 import (
 	"errors"
 	"log"
+	"net/url"
 	"os"
 	"time"
 
@@ -25,11 +26,19 @@ func init() {
 		log.Fatalf("migrate: environment variable not declared: PG_URL")
 	}
 
-	databaseURL += "?sslmode=disable"
+	parsedURL, err := url.Parse(databaseURL)
+	if err != nil {
+		log.Fatalf("migrate: invalid PG_URL: %v", err)
+	}
+	query := parsedURL.Query()
+	if query.Get("sslmode") == "" {
+		query.Set("sslmode", "disable")
+	}
+	parsedURL.RawQuery = query.Encode()
+	databaseURL = parsedURL.String()
 
 	var (
 		attempts = _defaultAttempts
-		err      error
 		m        *migrate.Migrate
 	)
 

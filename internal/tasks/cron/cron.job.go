@@ -9,6 +9,8 @@ import (
 	"github.com/go-redsync/redsync/v4"
 )
 
+const exampleJobDuration = 20 * time.Second
+
 type exampleJobImpl struct {
 	logger logger.Logger
 }
@@ -38,5 +40,12 @@ func (j *exampleJobImpl) CronConfig() CronConfig {
 
 func (j *exampleJobImpl) Do(ctx context.Context) {
 	j.logger.Infof("cron job running")
-	time.Sleep(20 * time.Second)
+
+	timer := time.NewTimer(exampleJobDuration)
+	defer timer.Stop()
+
+	select {
+	case <-timer.C:
+	case <-ctx.Done():
+	}
 }

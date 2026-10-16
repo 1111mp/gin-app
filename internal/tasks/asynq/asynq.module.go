@@ -3,12 +3,15 @@ package asynq
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/1111mp/gin-app/config"
 	"github.com/1111mp/gin-app/pkg/logger"
 	asynqlib "github.com/hibiken/asynq"
 	"go.uber.org/fx"
 )
+
+const asynqStopTimeout = 10 * time.Second
 
 var Module = fx.Module(
 	"asynq",
@@ -129,7 +132,6 @@ var Module = fx.Module(
 		fx.Annotate(
 			func(
 				lc fx.Lifecycle,
-				sd fx.Shutdowner,
 				logger logger.Logger,
 				server *asynqlib.Server,
 				mux *asynqlib.ServeMux,
@@ -137,17 +139,15 @@ var Module = fx.Module(
 				lc.Append(
 					fx.Hook{
 						OnStart: func(ctx context.Context) error {
-							go func() {
-								if err := server.Run(mux); err != nil {
-									logger.Fatal(fmt.Errorf("app - Run - asynq - server.Run: %w", err))
-									// ! It's better to just shut down the app and let Kubernetes restart it.
-									_ = sd.Shutdown()
-								}
-							}()
+							if err := server.Start(mux); err != nil {
+								return fmt.Errorf("app - Run - asynq - server.Start: %w", err)
+							}
 							logger.Info("app - Run - asynq - server started")
 							return nil
 						},
 						OnStop: func(ctx context.Context) error {
+							ctx, cancel := context.WithTimeout(ctx, asynqStopTimeout)
+							defer cancel()
 							done := make(chan struct{})
 							go func() {
 								server.Shutdown()
@@ -159,6 +159,8 @@ var Module = fx.Module(
 								logger.Info("app - Run - asynq - server stopped")
 							case <-ctx.Done():
 								logger.Warn("app - Run - asynq - server shutdown timeout")
+
+								return ctx.Err()
 							}
 
 							return nil
@@ -167,7 +169,7 @@ var Module = fx.Module(
 				)
 			},
 			// Use fx.ParamTags to specify the name of the server dependency
-			fx.ParamTags("", "", "", `name:"asynq_server"`, `name:"asynq_server_mux"`),
+			fx.ParamTags("", "", `name:"asynq_server"`, `name:"asynq_server_mux"`),
 		),
 	),
 )

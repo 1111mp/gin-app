@@ -16,6 +16,8 @@ import (
 	"go.uber.org/fx"
 )
 
+const tracingStopTimeout = 3 * time.Second
+
 var Module = fx.Module(
 	"tracing",
 
@@ -96,6 +98,8 @@ var Module = fx.Module(
 							return nil
 						},
 						OnStop: func(ctx context.Context) error {
+							ctx, cancel := context.WithTimeout(ctx, tracingStopTimeout)
+							defer cancel()
 							logger.Infof("app - Run - tracing - shutting down")
 							err := tp.Shutdown(ctx)
 							if err != nil {

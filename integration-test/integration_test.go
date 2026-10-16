@@ -180,7 +180,7 @@ func TestClientRMQRPCV1(t *testing.T) { //nolint: dupl,gocritic,nolintlint
 	}
 
 	defer func() {
-		err = client.Shutdown()
+		err = client.Shutdown(context.Background())
 		if err != nil {
 			t.Fatal("RabbitMQ RPC Client - shutdown error - client.RemoteCall", err)
 		}

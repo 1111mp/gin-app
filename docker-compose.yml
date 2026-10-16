@@ -79,13 +79,9 @@ services:
     volumes:
       - redis_data:/data
     command:
-      [
-        'redis-server',
-        '--appendonly',
-        'yes',
-        '--requirepass',
-        '$$REDIS_PASSWORD',
-      ]
+      - sh
+      - -c
+      - 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
     ports:
       - '6379:6379'
     networks:
@@ -124,6 +120,7 @@ services:
           - nats.lvh.me
 
   app:
+    stop_grace_period: 80s
     container_name: app
     platform: linux/amd64
     pid: 'host'

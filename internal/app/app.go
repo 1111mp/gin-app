@@ -3,8 +3,10 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/1111mp/gin-app/config"
 	"github.com/1111mp/gin-app/internal/modules"
@@ -28,9 +30,17 @@ import (
 	"go.uber.org/fx"
 )
 
+const (
+	appStopTimeout      = 75 * time.Second
+	logStopTimeout      = 2 * time.Second
+	postgresStopTimeout = 3 * time.Second
+)
+
 // Run creates objects via constructors.
 func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
 	fx.New(
+		// Hooks stop serially; local budgets total less than 75 seconds.
+		fx.StopTimeout(appStopTimeout),
 		fx.Supply(
 			fx.Annotate(
 				cfg,
@@ -40,9 +50,24 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 
 		fx.Provide(
 			// logger
-			func(cfg config.Config) logger.Logger {
-				return logger.New(cfg.Log().Dir, cfg.Log().Level)
-			},
+			fx.Annotate(
+				func(cfg config.Config) logger.Logger { return logger.New(cfg.Log().Dir, cfg.Log().Level) },
+				fx.OnStop(func(ctx context.Context, l logger.Logger) error {
+					ctx, cancel := context.WithTimeout(ctx, logStopTimeout)
+					defer cancel()
+
+					done := make(chan error, 1)
+
+					go func() { done <- logger.Close(l) }()
+
+					select {
+					case err := <-done:
+						return err
+					case <-ctx.Done():
+						return ctx.Err()
+					}
+				}),
+			),
 			// postgres
 			fx.Annotate(
 				func(cfg config.Config, logger logger.Logger) (*postgres.Postgres, error) {
@@ -55,10 +80,22 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 					logger.Info("app - Run - postgres connected")
 					return pg, nil
 				},
-				fx.OnStop(func(logger logger.Logger, pg *postgres.Postgres) error {
-					logger.Info("app - Run - postgres closed")
-					pg.Close()
-					return nil
+				fx.OnStop(func(ctx context.Context, logger logger.Logger, pg *postgres.Postgres) error {
+					ctx, cancel := context.WithTimeout(ctx, postgresStopTimeout)
+					defer cancel()
+
+					done := make(chan error, 1)
+
+					go func() { done <- pg.Close() }()
+
+					select {
+					case err := <-done:
+						logger.Info("app - Run - postgres closed")
+
+						return err
+					case <-ctx.Done():
+						return ctx.Err()
+					}
 				}),
 			),
 			// redis
@@ -74,10 +111,11 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 					return rdb, nil
 				},
 				fx.OnStop(func(logger logger.Logger, rdb *redis.Redis) error {
+					err := rdb.Close()
+
 					logger.Info("app - Run - redis closed")
 
-					rdb.Close()
-					return nil
+					return err
 				}),
 			),
 			// redsync
@@ -128,14 +166,18 @@ func Run(cfg config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlin
 				return httpserver.New(handler, httpserver.Port(cfg.HTTP().Port))
 			},
 		),
+		// Register hooks in dependency order; Fx stops them in reverse order.
+		observability.Module,
+		// Eagerly create PG/Redis so their OnStop hooks are registered before RPC/tasks
+		// and run after them during shutdown. Use a module because Fx executes child
+		// module invokes before root invokes, regardless of their position here.
+		fx.Module("infrastructure", fx.Invoke(func(*postgres.Postgres, *redis.Redis) {})),
 		// rpc
 		rpc.Module,
 		// tasks
 		tasks.Module,
 		// api
 		modules.APIModule,
-		// observability
-		observability.Module,
 		// start http server
 		fx.Invoke(startHTTPServer),
 	).Run()
@@ -154,9 +196,12 @@ func startHTTPServer(
 				logger.Info("http server - Starting HTTP Server...")
 
 				go func() {
-					if err := httpServer.Start(); err != nil && err != http.ErrServerClosed {
+					if err := httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 						logger.Errorf("http server - Start HTTP Server error: %v", err)
-						_ = sd.Shutdown()
+
+						if err := sd.Shutdown(fx.ExitCode(1)); err != nil {
+							logger.Error(err)
+						}
 					}
 				}()
 
@@ -167,7 +212,7 @@ func startHTTPServer(
 			OnStop: func(ctx context.Context) error {
 				logger.Info("http server - Stopping HTTP Server...")
 
-				err := httpServer.Shutdown()
+				err := httpServer.Shutdown(ctx)
 				if err != nil {
 					return err
 				}
