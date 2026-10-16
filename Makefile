@@ -116,7 +116,8 @@ ls-deps: ### list outdated dependencies
 .PHONY: ls-deps
 
 upgrade-deps: ### upgrade dependencies to latest minor/patch versions
-	go get -u ./...
+	go get -u -t ./...
+	go get tool
 	go mod tidy
 .PHONY: upgrade-deps
 
